@@ -1,9 +1,9 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Fragment } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   ArrowRight, Check, X, Zap, Shield, Lock, Database, Globe, Network,
-  BarChart3, Settings2, FileCode, Eye,
-  BookOpen, GitBranch, Package, ChevronRight,
+  BarChart3, Settings2, FileCode, Eye, SlidersHorizontal,
+  BookOpen, Package, ChevronRight,
   Users, TrendingUp, CheckCircle2, Clock, Star,
   Braces, Upload, ToggleLeft, LayoutDashboard,
 } from "lucide-react";
@@ -43,27 +43,27 @@ interface Theme {
 const THEMES: Record<ThemeKey, Theme> = {
   "lunar-dark": {
     key: "lunar-dark", label: "Dark", isDark: true,
-    bg: "#0D0D12", surface: "rgba(255,255,255,0.07)", surface2: "rgba(255,255,255,0.04)",
-    primary: "#FFFFFF", secondary: "#EBEBF5", accent: "#FFFFFF",
-    accent1: "#A855F7", accent2: "#60A5FA", accent3: "#14B8A6",
+    bg: "#05070D", surface: "rgba(255,255,255,0.07)", surface2: "rgba(255,255,255,0.04)",
+    primary: "#FFFFFF", secondary: "#C8D4EC", accent: "#FFFFFF",
+    accent1: "#58ECFF", accent2: "#A0D4F8", accent3: "#E8F6FF",
     gradient: "linear-gradient(135deg, #FFFFFF 0%, rgba(255,255,255,0.55) 100%)",
-    text: "#FFFFFF", textMuted: "rgba(235,235,245,0.6)", textFaint: "rgba(235,235,245,0.22)",
+    text: "#FFFFFF", textMuted: "rgba(200,212,236,0.65)", textFaint: "rgba(200,212,236,0.25)",
     border: "rgba(255,255,255,0.1)",
     glowStrong: "rgba(255,255,255,0.15)", glowSubtle: "rgba(255,255,255,0.05)",
-    glow1: "rgba(168,85,247,0.24)", glow2: "rgba(96,165,250,0.20)", glow3: "rgba(20,184,166,0.16)",
-    buttonBg: "#FFFFFF", buttonText: "#0D0D12", buttonHoverBg: "#E4E4E7",
+    glow1: "rgba(140,158,205,0.45)", glow2: "rgba(55,175,235,0.22)", glow3: "rgba(190,210,240,0.30)",
+    buttonBg: "#FFFFFF", buttonText: "#05070D", buttonHoverBg: "#E0E4EC",
   },
   "lunar-light": {
     key: "lunar-light", label: "Light", isDark: false,
-    bg: "#F2F0FF", surface: "rgba(255,255,255,0.58)", surface2: "rgba(255,255,255,0.82)",
-    primary: "#1C1C1E", secondary: "#3C3C43", accent: "#1C1C1E",
-    accent1: "#7C3AED", accent2: "#2563EB", accent3: "#0D9488",
-    gradient: "linear-gradient(135deg, #1C1C1E 0%, rgba(28,28,30,0.5) 100%)",
-    text: "#1C1C1E", textMuted: "rgba(60,60,67,0.65)", textFaint: "rgba(60,60,67,0.28)",
+    bg: "#E8EBF2", surface: "rgba(255,255,255,0.60)", surface2: "rgba(255,255,255,0.84)",
+    primary: "#1A1C24", secondary: "#3A3C48", accent: "#1A1C24",
+    accent1: "#1E4FAA", accent2: "#1060C8", accent3: "#2870CC",
+    gradient: "linear-gradient(135deg, #1A1C24 0%, rgba(26,28,36,0.5) 100%)",
+    text: "#1A1C24", textMuted: "rgba(28,32,50,0.82)", textFaint: "rgba(28,32,50,0.54)",
     border: "rgba(255,255,255,0.88)",
     glowStrong: "rgba(0,0,0,0.08)", glowSubtle: "rgba(0,0,0,0.03)",
-    glow1: "rgba(124,58,237,0.38)", glow2: "rgba(37,99,235,0.28)", glow3: "rgba(13,148,136,0.22)",
-    buttonBg: "#1C1C1E", buttonText: "#FFFFFF", buttonHoverBg: "#3A3A3C",
+    glow1: "rgba(130,148,192,0.55)", glow2: "rgba(80,110,170,0.42)", glow3: "rgba(170,188,225,0.38)",
+    buttonBg: "#1A1C24", buttonText: "#FFFFFF", buttonHoverBg: "#2E3040",
   },
 };
 
@@ -125,6 +125,7 @@ const COLOR_PRESETS = [
 interface WidgetConfig {
   brandName: string;
   logoText: string;
+  logoImage: string;
   brandColor: string;
   position: "right" | "left";
   widgetTheme: "light" | "dark";
@@ -144,28 +145,85 @@ const GLOBAL_CSS = `
     0% { transform: translateX(0); }
     100% { transform: translateX(-50%); }
   }
+  @keyframes text-shimmer {
+    0% { background-position: 200% center; }
+    100% { background-position: -200% center; }
+  }
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.15; transform: scale(1); }
+    50% { opacity: 0.9; transform: scale(1.4); }
+  }
+  @keyframes orb-breathe {
+    0%, 100% { opacity: 1; transform: translateX(-50%) scale(1); }
+    50% { opacity: 0.75; transform: translateX(-50%) scale(1.12); }
+  }
+  @keyframes orb-drift {
+    0%, 100% { opacity: 1; transform: scale(1) translate(0, 0); }
+    33% { opacity: 0.8; transform: scale(1.1) translate(3%, -2%); }
+    66% { opacity: 0.9; transform: scale(0.95) translate(-2%, 3%); }
+  }
+  @keyframes aurora-pulse {
+    0%, 100% { opacity: 0.55; }
+    50% { opacity: 1; }
+  }
+  @keyframes border-glow-dark {
+    0%, 100% { box-shadow: 0 8px 32px rgba(0,0,0,0.25), 0 0 0 1px rgba(88,236,255,0.35), 0 0 18px rgba(88,236,255,0.22), 0 0 40px rgba(88,236,255,0.10); border-color: rgba(88,236,255,0.45); }
+    50% { box-shadow: 0 8px 32px rgba(0,0,0,0.25), 0 0 0 1px rgba(88,236,255,0.75), 0 0 32px rgba(88,236,255,0.45), 0 0 64px rgba(88,236,255,0.20); border-color: rgba(88,236,255,0.85); }
+  }
+  @keyframes border-glow-light {
+    0%, 100% { box-shadow: 0 4px 28px rgba(60,80,130,0.07), 0 0 0 1px rgba(30,79,170,0.30), 0 0 18px rgba(30,79,170,0.18), 0 0 40px rgba(30,79,170,0.08); border-color: rgba(30,79,170,0.45); }
+    50% { box-shadow: 0 4px 28px rgba(60,80,130,0.07), 0 0 0 1px rgba(30,79,170,0.65), 0 0 28px rgba(30,79,170,0.35), 0 0 56px rgba(30,79,170,0.15); border-color: rgba(30,79,170,0.80); }
+  }
+  .pipeline-last-dark { animation: border-glow-dark 2.6s ease-in-out infinite; }
+  .pipeline-last-light { animation: border-glow-light 2.6s ease-in-out infinite; }
   .orbit-node-dark {
     transition: box-shadow 0.3s ease, transform 0.25s ease;
   }
   .orbit-node-dark:hover {
-    box-shadow: 0 0 0 1px rgba(168,85,247,0.22), 0 0 24px rgba(168,85,247,0.38), 0 0 52px rgba(96,165,250,0.18);
+    box-shadow: 0 0 0 1px rgba(88,236,255,0.25), 0 0 24px rgba(88,236,255,0.35), 0 0 52px rgba(88,236,255,0.15);
     transform: scale(1.06);
   }
   .orbit-node-light {
     transition: box-shadow 0.3s ease, transform 0.25s ease;
   }
   .orbit-node-light:hover {
-    box-shadow: 0 0 0 1px rgba(124,58,237,0.2), 0 0 20px rgba(124,58,237,0.28), 0 0 44px rgba(37,99,235,0.14);
+    box-shadow: 0 0 0 1px rgba(30,79,170,0.25), 0 0 20px rgba(30,79,170,0.28), 0 0 44px rgba(100,118,158,0.16);
     transform: scale(1.06);
+  }
+  .btn-primary {
+    transition: transform 0.18s ease, box-shadow 0.18s ease !important;
+  }
+  .btn-primary:hover {
+    transform: translateY(-2px) !important;
   }
   * { scrollbar-width: none; -ms-overflow-style: none; box-sizing: border-box; }
   *::-webkit-scrollbar { display: none; }
   html { scroll-behavior: smooth; }
-  body { transition: background-color 0.3s ease; }
-  ::selection { background: rgba(139,92,246,0.3); }
+  body { transition: background-color 0.3s ease; font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif; -webkit-font-smoothing: antialiased; font-size: 16.5px; }
+  ::selection { background: rgba(88,236,255,0.25); }
   .glass-pill {
     backdrop-filter: blur(20px) saturate(150%);
     -webkit-backdrop-filter: blur(20px) saturate(150%);
+  }
+  .shimmer-dark {
+    background-image: linear-gradient(90deg, #6080A8 0%, #A8C8E8 22%, #E8F4FF 42%, #FFFFFF 50%, #E8F4FF 58%, #A8C8E8 78%, #6080A8 100%);
+    background-size: 200% auto;
+    color: transparent;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: text-shimmer 6s linear infinite;
+    display: inline-block;
+  }
+  .shimmer-light {
+    background-image: linear-gradient(90deg, #2A3A5A 0%, #4A6490 22%, #8098C0 42%, #1E3060 50%, #8098C0 58%, #4A6490 78%, #2A3A5A 100%);
+    background-size: 200% auto;
+    color: transparent;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: text-shimmer 6s linear infinite;
+    display: inline-block;
   }
 
   @media (max-width: 900px) {
@@ -237,150 +295,344 @@ function AnimatedPhrase({ phrases, theme }: { phrases: string[]; theme: Theme })
   );
 }
 
+// ─── How It Works — Pipeline Cards ───────────────────────────────────────────
+function PipelineCards({ theme, steps }: {
+  theme: Theme;
+  steps: Array<{ step: string; icon: React.ReactNode; title: string; desc: string }>;
+}) {
+  const t = theme;
+  const a1 = t.accent1;
+  const a2 = t.accent2;
+
+  return (
+    <div>
+      <div style={{ display: "flex", alignItems: "stretch", gap: 0 }}>
+        {steps.map((step, i) => {
+          const isLast = i === steps.length - 1;
+          return (
+            <Fragment key={i}>
+              <motion.div
+                initial={{ opacity: 0, y: 28 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.65, delay: i * 0.13, ease: [0.22, 1, 0.36, 1] }}
+                viewport={{ once: true }}
+                style={{
+                  flex: 1, borderRadius: 24, position: "relative",
+                  display: "flex", flexDirection: "column",
+                  padding: "28px 22px 26px", overflow: "hidden",
+                  backdropFilter: "blur(48px) saturate(200%)",
+                  WebkitBackdropFilter: "blur(48px) saturate(200%)",
+                  background: t.isDark
+                    ? "linear-gradient(155deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.04) 100%)"
+                    : "linear-gradient(155deg, rgba(255,255,255,0.97) 0%, rgba(240,245,255,0.82) 100%)",
+                  border: isLast
+                    ? `1px solid ${t.isDark ? `${a1}40` : `${a1}35`}`
+                    : `1px solid ${t.isDark ? "rgba(255,255,255,0.09)" : "rgba(255,255,255,0.92)"}`,
+                  boxShadow: isLast
+                    ? t.isDark
+                      ? `0 8px 40px rgba(0,0,0,0.3), 0 0 0 1px ${a1}20, 0 0 40px ${a1}12`
+                      : `0 8px 40px rgba(80,100,180,0.10), 0 0 0 1px ${a1}20, 0 0 32px ${a1}0A`
+                    : t.isDark
+                      ? "0 4px 32px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.07)"
+                      : "0 4px 32px rgba(80,100,180,0.07), inset 0 1px 0 rgba(255,255,255,1)",
+                }}
+              >
+                {/* Top rim light */}
+                <div style={{
+                  position: "absolute", top: 0, left: "8%", right: "8%", height: 1,
+                  background: t.isDark
+                    ? `linear-gradient(90deg, transparent, ${a1}55, transparent)`
+                    : "linear-gradient(90deg, transparent, rgba(255,255,255,0.95), transparent)",
+                  borderRadius: 999,
+                }} />
+
+                {/* Icon ambient glow */}
+                <div style={{
+                  position: "absolute", top: -30, left: -30,
+                  width: 110, height: 110, borderRadius: "50%",
+                  background: t.isDark
+                    ? `radial-gradient(circle, ${a1}18 0%, transparent 70%)`
+                    : `radial-gradient(circle, rgba(80,100,220,0.07) 0%, transparent 70%)`,
+                  pointerEvents: "none",
+                }} />
+
+                {/* Step label */}
+                <div style={{
+                  fontSize: 10, fontWeight: 700, letterSpacing: "0.14em",
+                  textTransform: "uppercase" as const, marginBottom: 14,
+                  color: t.isDark ? `${a1}99` : "rgba(80,100,200,0.55)",
+                }}>Step {step.step}</div>
+
+                {/* Icon */}
+                <div style={{
+                  width: 46, height: 46, borderRadius: 13, marginBottom: 18, flexShrink: 0,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  color: t.isDark ? a1 : "rgba(60,90,210,0.85)",
+                  background: t.isDark
+                    ? `linear-gradient(135deg, ${a1}20, ${a1}08)`
+                    : "linear-gradient(135deg, rgba(80,100,220,0.10), rgba(80,100,220,0.03))",
+                  border: t.isDark ? `1px solid ${a1}28` : "1px solid rgba(80,100,220,0.13)",
+                  boxShadow: t.isDark
+                    ? `0 0 18px ${a1}18, 0 2px 8px rgba(0,0,0,0.2)`
+                    : `0 0 14px rgba(80,100,220,0.08)`,
+                }}>{step.icon}</div>
+
+                <h3 style={{
+                  fontSize: 16, fontWeight: 700, margin: "0 0 9px",
+                  lineHeight: 1.3, letterSpacing: "-0.02em", color: t.text,
+                }}>{step.title}</h3>
+
+                <p style={{
+                  fontSize: 13.5, color: t.textMuted, lineHeight: 1.7, margin: 0,
+                }}>{step.desc}</p>
+
+                {/* Last card breathing ring */}
+                {isLast && (
+                  <motion.div
+                    animate={{ opacity: [0.3, 0.7, 0.3] }}
+                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                    style={{
+                      position: "absolute", inset: -1, borderRadius: 24,
+                      border: `1px solid ${a1}`,
+                      pointerEvents: "none",
+                    }}
+                  />
+                )}
+              </motion.div>
+
+              {/* Connector — single clean arc */}
+              {i < steps.length - 1 && (() => {
+                const arcDown = i % 2 === 0;
+                const arc = arcDown
+                  ? "M 0 50 C 16 76 40 76 56 50"
+                  : "M 0 50 C 16 24 40 24 56 50";
+                const mid: [number, number] = arcDown ? [28, 76] : [28, 24];
+                return (
+                  <div style={{ width: 44, flexShrink: 0, alignSelf: "stretch" }}>
+                    <svg viewBox="0 0 56 100" width="44" height="100%"
+                      preserveAspectRatio="none"
+                      style={{ display: "block", overflow: "visible" }}>
+                      <defs>
+                        <linearGradient id={`pcg-${i}`} x1="0%" y1="0%" x2="100%" y2="0%">
+                          <stop offset="0%" stopColor={a1} stopOpacity="0.15" />
+                          <stop offset="50%" stopColor={a2} stopOpacity="0.35" />
+                          <stop offset="100%" stopColor={a1} stopOpacity="0.15" />
+                        </linearGradient>
+                        <filter id={`pglow-${i}`}>
+                          <feGaussianBlur stdDeviation="2.5" result="b" />
+                          <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+                        </filter>
+                      </defs>
+                      {/* Ambient glow trace */}
+                      <path d={arc} stroke={a1} strokeWidth="5" fill="none"
+                        strokeOpacity="0.07" strokeLinecap="round" filter={`url(#pglow-${i})`} />
+                      {/* Core dashed line */}
+                      <path d={arc} stroke={`url(#pcg-${i})`} strokeWidth="0.9" fill="none"
+                        strokeLinecap="round" strokeDasharray="2.5 5" />
+                      {/* Single gliding particle */}
+                      <motion.circle r={2.2} fill={a1}
+                        animate={{ cx: [0, mid[0], 56], cy: [50, mid[1], 50], opacity: [0, 1, 0] }}
+                        transition={{ duration: 2.6, repeat: Infinity, delay: i * 0.65, ease: "easeInOut" }}
+                        style={{ filter: `drop-shadow(0 0 5px ${a1}) drop-shadow(0 0 10px ${a1}80)` }}
+                      />
+                    </svg>
+                  </div>
+                );
+              })()}
+            </Fragment>
+          );
+        })}
+      </div>
+
+      {/* Completion pill */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.55, delay: 0.6 }} viewport={{ once: true }}
+        style={{ textAlign: "center", marginTop: 32 }}
+      >
+        <div style={{
+          display: "inline-flex", alignItems: "center", gap: 12,
+          backdropFilter: "blur(32px) saturate(180%)", WebkitBackdropFilter: "blur(32px) saturate(180%)",
+          background: t.isDark ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.88)",
+          border: `1px solid ${t.isDark ? `${a1}30` : `${a1}25`}`,
+          borderRadius: 999, padding: "11px 24px",
+          boxShadow: t.isDark
+            ? `0 0 32px ${a1}10, inset 0 1px 0 rgba(255,255,255,0.07)`
+            : `0 4px 24px rgba(80,100,180,0.08), inset 0 1px 0 rgba(255,255,255,1)`,
+        }}>
+          <motion.div
+            animate={{ scale: [1, 1.12, 1], opacity: [0.8, 1, 0.8] }}
+            transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+            style={{
+              width: 26, height: 26, borderRadius: 9999,
+              background: t.isDark ? a1 : "rgba(60,90,210,0.9)",
+              display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+              boxShadow: `0 0 16px ${a1}50`,
+            }}>
+            <Check size={12} color="white" strokeWidth={3} />
+          </motion.div>
+          <span style={{ fontSize: 14, fontWeight: 600, color: t.text, letterSpacing: "-0.01em" }}>Action complete</span>
+          <span style={{ width: 1, height: 14, background: t.isDark ? "rgba(255,255,255,0.12)" : "rgba(28,32,50,0.12)" }} />
+          <span style={{ fontSize: 14, color: t.isDark ? a1 : "rgba(60,90,210,0.85)", fontWeight: 500 }}>Live intelligence is active</span>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 // ─── Hero Visualization ───────────────────────────────────────────────────────
 function HeroViz({ theme }: { theme: Theme }) {
   const nodes = [
-    { label: "User Intent", sub: '"Upgrade to Enterprise"', step: "01" },
-    { label: "Knowledge Search", sub: "2,400 docs indexed", step: "02" },
+    { label: "User Intent", sub: "Upgrade to Enterprise", step: "01" },
+    { label: "KB Search", sub: "2,400 docs indexed", step: "02" },
     { label: "Tool Selection", sub: "upgrade_subscription", step: "03" },
     { label: "API Execution", sub: "POST /v1/subscriptions", step: "04" },
-    { label: "Action Complete", sub: "Enterprise plan active", step: "✓", isLast: true },
+    { label: "Action Complete", sub: "Enterprise active", step: "✓", isLast: true },
   ];
 
-  const centers: [number, number][] = [
-    [250, 50], [158, 168], [342, 286], [158, 404], [250, 504],
-  ];
+  // Alternating Y positions: odd nodes high (85), even nodes low (165)
+  const NX = [100, 300, 500, 700, 900];
+  const NY = [85, 165, 85, 165, 85];
+  const NW = 172, NH = 58, r = 29;
 
+  // Diagonal S-curves between alternating heights
   const paths = [
-    "M 250 76 C 218 116 190 116 158 142",
-    "M 158 194 C 198 234 302 234 342 260",
-    "M 342 312 C 302 352 198 352 158 378",
-    "M 158 430 C 190 462 222 480 250 480",
+    `M ${NX[0]+NW/2} ${NY[0]} C ${NX[0]+NW/2+30} ${NY[0]} ${NX[1]-NW/2-30} ${NY[1]} ${NX[1]-NW/2} ${NY[1]}`,
+    `M ${NX[1]+NW/2} ${NY[1]} C ${NX[1]+NW/2+30} ${NY[1]} ${NX[2]-NW/2-30} ${NY[2]} ${NX[2]-NW/2} ${NY[2]}`,
+    `M ${NX[2]+NW/2} ${NY[2]} C ${NX[2]+NW/2+30} ${NY[2]} ${NX[3]-NW/2-30} ${NY[3]} ${NX[3]-NW/2} ${NY[3]}`,
+    `M ${NX[3]+NW/2} ${NY[3]} C ${NX[3]+NW/2+30} ${NY[3]} ${NX[4]-NW/2-30} ${NY[4]} ${NX[4]-NW/2} ${NY[4]}`,
   ];
 
+  // Particle midpoints: midpoint of each diagonal at x=200,400,600,800 and midY
   const pkf = [
-    { cx: [250, 204, 158] as number[], cy: [76, 114, 142] as number[] },
-    { cx: [158, 250, 342] as number[], cy: [194, 234, 260] as number[] },
-    { cx: [342, 250, 158] as number[], cy: [312, 352, 378] as number[] },
-    { cx: [158, 204, 250] as number[], cy: [430, 464, 480] as number[] },
+    { x: [NX[0]+NW/2, 200, NX[1]-NW/2], y: [NY[0], 125, NY[1]] },
+    { x: [NX[1]+NW/2, 400, NX[2]-NW/2], y: [NY[1], 125, NY[2]] },
+    { x: [NX[2]+NW/2, 600, NX[3]-NW/2], y: [NY[2], 125, NY[3]] },
+    { x: [NX[3]+NW/2, 800, NX[4]-NW/2], y: [NY[3], 125, NY[4]] },
   ];
-
-  const NW = 208, NH = 50;
 
   return (
-    <div style={{ position: "relative", width: "100%", maxWidth: 500, margin: "0 auto" }}>
+    <div style={{ position: "relative", width: "100%" }}>
       <div style={{
-        position: "absolute", top: "15%", left: "5%", right: "5%", bottom: "15%",
-        background: `radial-gradient(ellipse at center, ${theme.glow2} 0%, transparent 65%)`,
+        position: "absolute", top: "5%", left: "20%", right: "20%", bottom: "5%",
+        background: `radial-gradient(ellipse at center, ${theme.glow1} 0%, transparent 70%)`,
+        filter: "blur(55px)", pointerEvents: "none",
+      }} />
+      <div style={{
+        position: "absolute", top: "15%", left: "35%", right: "35%", bottom: "15%",
+        background: `radial-gradient(ellipse at center, ${theme.glow2} 0%, transparent 70%)`,
         filter: "blur(40px)", pointerEvents: "none",
       }} />
-      <div style={{
-        position: "absolute", top: "20%", left: "15%", right: "15%", bottom: "20%",
-        background: `radial-gradient(ellipse at center, ${theme.glow1} 0%, transparent 65%)`,
-        filter: "blur(60px)", pointerEvents: "none",
-      }} />
 
-      <svg viewBox="0 0 500 554" style={{ width: "100%", overflow: "visible" }}>
+      <svg viewBox="0 0 1000 250" style={{ width: "100%", overflow: "visible" }}>
         <defs>
-          <linearGradient id={`lg-${theme.key}`} x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor={theme.primary} stopOpacity="0.95" />
-            <stop offset="50%" stopColor={theme.secondary} stopOpacity="0.95" />
-            <stop offset="100%" stopColor={theme.accent} stopOpacity="0.95" />
+          <linearGradient id={`lg-${theme.key}`} x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor={theme.accent1} stopOpacity="0.9" />
+            <stop offset="50%" stopColor={theme.accent2} stopOpacity="0.9" />
+            <stop offset="100%" stopColor={theme.accent3} stopOpacity="0.9" />
           </linearGradient>
-          <filter id={`gf-${theme.key}`} x="-40%" y="-40%" width="180%" height="180%">
+          <filter id={`gf-${theme.key}`} x="-50%" y="-50%" width="200%" height="200%">
             <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="blur" />
             <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
           </filter>
         </defs>
 
+        {/* Glow traces */}
         {paths.map((d, i) => (
-          <path key={`glow-${i}`} d={d} stroke={theme.primary} strokeWidth="5"
+          <path key={`glow-${i}`} d={d} stroke={theme.accent1} strokeWidth="8"
             fill="none" strokeOpacity="0.06" strokeLinecap="round" />
         ))}
 
+        {/* Animated dashed paths */}
         {paths.map((d, i) => (
           <path key={`path-${i}`} d={d}
-            stroke={`url(#lg-${theme.key})`} strokeWidth="1.5"
-            fill="none" strokeDasharray="5 4" strokeLinecap="round"
-            style={{ animation: `nav-flow ${1.6 + i * 0.12}s linear infinite ${i * 0.3}s` }}
+            stroke={`url(#lg-${theme.key})`} strokeWidth="1.8"
+            fill="none" strokeDasharray="6 5" strokeLinecap="round"
+            style={{ animation: `nav-flow ${1.8 + i * 0.1}s linear infinite ${i * 0.3}s` }}
           />
         ))}
 
+        {/* Traveling particles */}
         {pkf.map((kf, i) => (
-          <motion.circle key={`p1-${i}`} r={3.5}
+          <motion.circle key={`p1-${i}`} r={4}
             fill={i % 2 === 0 ? theme.accent1 : theme.accent2}
-            animate={{ cx: kf.cx, cy: kf.cy, opacity: [0, 1, 1, 0] }}
-            transition={{ duration: 2 + i * 0.25, repeat: Infinity, delay: i * 0.4, ease: "easeInOut", times: [0, 0.1, 0.9, 1] }}
+            animate={{ cx: kf.x, cy: kf.y, opacity: [0, 1, 1, 0] }}
+            transition={{ duration: 2 + i * 0.2, repeat: Infinity, delay: i * 0.4, ease: "easeInOut", times: [0, 0.1, 0.9, 1] }}
             style={{ filter: `drop-shadow(0 0 6px ${i % 2 === 0 ? theme.accent1 : theme.accent2})` }}
           />
         ))}
         {pkf.map((kf, i) => (
-          <motion.circle key={`p2-${i}`} r={2}
+          <motion.circle key={`p2-${i}`} r={2.5}
             fill={theme.accent3}
-            animate={{ cx: kf.cx, cy: kf.cy, opacity: [0, 0.7, 0.7, 0] }}
-            transition={{ duration: 2 + i * 0.25, repeat: Infinity, delay: i * 0.4 + 1, ease: "easeInOut", times: [0, 0.1, 0.9, 1] }}
+            animate={{ cx: kf.x, cy: kf.y, opacity: [0, 0.7, 0.7, 0] }}
+            transition={{ duration: 2 + i * 0.2, repeat: Infinity, delay: i * 0.4 + 1, ease: "easeInOut", times: [0, 0.1, 0.9, 1] }}
             style={{ filter: `drop-shadow(0 0 4px ${theme.accent3})` }}
           />
         ))}
 
+        {/* Nodes */}
         {nodes.map((node, i) => {
-          const [cx, cy] = centers[i];
-          const nx = cx - NW / 2, ny = cy - NH / 2;
-          const r = NH / 2;
-          const isLast = node.isLast;
+          const x = NX[i], y = NY[i];
+          const nx = x - NW / 2, ny = y - NH / 2;
+          const isLast = !!node.isLast;
 
           return (
             <g key={i}>
               {isLast && (
                 <>
                   <rect x={nx - 8} y={ny - 8} width={NW + 16} height={NH + 16}
-                    rx={r + 8} fill={theme.primary} fillOpacity="0.06" />
-                  <rect x={nx - 3} y={ny - 3} width={NW + 6} height={NH + 6}
-                    rx={r + 3} fill="none" stroke={theme.primary} strokeWidth="1"
-                    strokeOpacity="0.25" />
+                    rx={r + 8} fill={theme.accent1} fillOpacity="0.06" />
+                  <rect x={nx - 2} y={ny - 2} width={NW + 4} height={NH + 4}
+                    rx={r + 2} fill="none" stroke={theme.accent1} strokeWidth="1.2"
+                    strokeOpacity="0.3" />
                 </>
               )}
 
               <rect x={nx} y={ny} width={NW} height={NH} rx={r}
-                fill={theme.surface}
-                stroke={isLast ? theme.primary : theme.border}
-                strokeWidth={isLast ? 1.5 : 1}
+                fill={theme.isDark ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.94)"}
+                stroke={isLast ? theme.accent1 : (theme.isDark ? "rgba(255,255,255,0.14)" : "rgba(140,155,190,0.5)")}
+                strokeWidth={isLast ? 1.8 : 1}
                 filter={isLast ? `url(#gf-${theme.key})` : undefined}
               />
 
-              <circle cx={nx + r} cy={cy} r={r * 0.58}
-                fill={theme.primary} fillOpacity={isLast ? 0.22 : 0.08}
+              {/* Step badge */}
+              <circle cx={nx + r} cy={y} r={r * 0.55}
+                fill={isLast ? theme.accent1 : theme.accent1}
+                fillOpacity={isLast ? 0.22 : (theme.isDark ? 0.1 : 0.12)}
               />
-
-              <text x={nx + r} y={cy + 4}
-                fill={isLast ? theme.primary : theme.textMuted}
-                fontSize="9.5" fontWeight="700" textAnchor="middle"
+              <text x={nx + r} y={y + 4.5}
+                fill={isLast ? theme.accent1 : (theme.isDark ? "rgba(200,210,235,0.8)" : "rgba(30,79,170,0.85)")}
+                fontSize="11" fontWeight="800" textAnchor="middle"
                 fontFamily="'Plus Jakarta Sans', sans-serif"
               >{node.step}</text>
 
-              <text x={nx + r * 2 + 6} y={cy - 7}
-                fill={isLast ? theme.primary : theme.text}
-                fontSize="10.5" fontWeight="600"
+              {/* Label */}
+              <text x={nx + r * 2 + 8} y={y - 7}
+                fill={isLast ? theme.accent1 : (theme.isDark ? "#F0F4FF" : "#1A1C24")}
+                fontSize="12" fontWeight="700"
                 fontFamily="'Plus Jakarta Sans', sans-serif"
               >{node.label}</text>
 
-              <text x={nx + r * 2 + 6} y={cy + 8}
-                fill={theme.textFaint} fontSize="9"
+              {/* Sub */}
+              <text x={nx + r * 2 + 8} y={y + 10}
+                fill={theme.isDark ? "rgba(180,195,230,0.5)" : "rgba(55,58,72,0.58)"}
+                fontSize="9.5"
                 fontFamily="'JetBrains Mono', monospace"
               >{node.sub}</text>
             </g>
           );
         })}
 
-        <motion.circle cx={250} cy={504} r={30} fill="none"
-          stroke={theme.accent1} strokeWidth="1"
-          animate={{ r: [28, 52], opacity: [0.5, 0] }}
+        {/* Pulsing rings on last node */}
+        <motion.circle cx={NX[4]} cy={NY[4]} r={30} fill="none"
+          stroke={theme.accent1} strokeWidth="1.2"
+          animate={{ r: [28, 52], opacity: [0.6, 0] }}
           transition={{ duration: 2.5, repeat: Infinity, ease: "easeOut" }}
         />
-        <motion.circle cx={250} cy={504} r={30} fill="none"
+        <motion.circle cx={NX[4]} cy={NY[4]} r={30} fill="none"
           stroke={theme.accent2} strokeWidth="1"
-          animate={{ r: [28, 52], opacity: [0.35, 0] }}
-          transition={{ duration: 2.5, repeat: Infinity, ease: "easeOut", delay: 0.8 }}
+          animate={{ r: [28, 52], opacity: [0.4, 0] }}
+          transition={{ duration: 2.5, repeat: Infinity, ease: "easeOut", delay: 0.9 }}
         />
       </svg>
     </div>
@@ -404,7 +656,7 @@ const DEMO_EVENTS: Array<{ delay: number; type: string; payload: Record<string, 
   { delay: 8000, type: "chat", payload: { role: "assistant", text: "Done. You're now on **Enterprise** — $199/month, unlimited messages, 50 sites, SSO & priority support. Prorated $125 charged for November." } },
 ];
 
-function DemoSection({ theme }: { theme: Theme }) {
+function DemoSection({ theme, heroMode = false }: { theme: Theme; heroMode?: boolean }) {
   const [chats, setChats] = useState<ChatMsg[]>([]);
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [isTyping, setIsTyping] = useState(false);
@@ -462,6 +714,13 @@ function DemoSection({ theme }: { theme: Theme }) {
   }
 
   useEffect(() => {
+    if (heroMode) {
+      runDemo();
+      return () => {
+        timeoutsRef.current.forEach(clearTimeout);
+        runningRef.current = false;
+      };
+    }
     const obs = new IntersectionObserver(entries => {
       if (entries[0].isIntersecting && !runningRef.current) runDemo();
     }, { threshold: 0.3 });
@@ -481,24 +740,7 @@ function DemoSection({ theme }: { theme: Theme }) {
   const totalTools = logs.filter(l => l.status === "done").length;
   const totalLatency = logs.filter(l => l.status === "done").reduce((a, l) => a + l.latencyMs, 0);
 
-  return (
-    <section id="demo-section" style={{ padding: "96px 24px", backgroundColor: theme.bg }}>
-      <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-        <div style={{ textAlign: "center", marginBottom: 56 }}>
-          <span style={{
-            display: "inline-block", padding: "6px 16px", borderRadius: 999,
-            background: `${theme.primary}18`, border: `1px solid ${theme.primary}30`,
-            color: theme.primary, fontSize: 12, fontWeight: 600, letterSpacing: "0.08em",
-            textTransform: "uppercase", marginBottom: 20,
-          }}>Live Demo</span>
-          <h2 style={{ fontSize: "clamp(2rem, 4vw, 2.75rem)", fontWeight: 800, lineHeight: 1.15, margin: "0 0 16px", color: theme.text }}>
-            Watch Navigator think and act
-          </h2>
-          <p style={{ fontSize: 17, color: theme.textMuted, maxWidth: 500, margin: "0 auto" }}>
-            Real tool calls. Real API execution. Not scripted — this is the actual agent loop running live.
-          </p>
-        </div>
-
+  const card = (
         <div style={{
           background: theme.isDark ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.72)",
           backdropFilter: "blur(40px) saturate(160%)",
@@ -508,7 +750,7 @@ function DemoSection({ theme }: { theme: Theme }) {
           overflow: "hidden",
           boxShadow: theme.isDark
             ? `0 40px 80px rgba(0,0,0,0.5)`
-            : `0 24px 80px rgba(80,40,180,0.1), 0 4px 16px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.95)`,
+            : `0 24px 80px rgba(80,95,130,0.1), 0 4px 16px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.95)`,
         }}>
           <div style={{
             padding: "14px 20px", display: "flex", alignItems: "center", gap: 12,
@@ -532,7 +774,7 @@ function DemoSection({ theme }: { theme: Theme }) {
             </div>
           </div>
 
-          <div className="demo-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", minHeight: 440 }}>
+          <div className="demo-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", height: 440 }}>
             <div style={{ borderRight: `1px solid ${theme.border}`, display: "flex", flexDirection: "column" }}>
               <div style={{
                 padding: "10px 16px", borderBottom: `1px solid ${theme.border}`,
@@ -564,7 +806,7 @@ function DemoSection({ theme }: { theme: Theme }) {
                       borderRadius: msg.role === "user" ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
                       background: msg.role === "user" ? theme.surface2 : `${theme.primary}10`,
                       border: `1px solid ${msg.role === "user" ? theme.border : theme.primary + "25"}`,
-                      fontSize: 13.5, lineHeight: 1.55, color: theme.text,
+                      fontSize: 14.5, lineHeight: 1.6, color: theme.text,
                     }}>
                       {bold(msg.text)}
                     </div>
@@ -657,22 +899,251 @@ function DemoSection({ theme }: { theme: Theme }) {
                 ))}
               </div>
 
-              <div style={{ padding: "12px 16px", borderTop: `1px solid ${theme.border}`, display: "flex", gap: 20, flexWrap: "wrap" }}>
-                {[
-                  { label: "Tools called", val: totalTools.toString() },
-                  { label: "Total latency", val: totalLatency > 0 ? `${totalLatency}ms` : "—" },
-                  { label: "Auth method", val: "Bearer JWT" },
-                ].map(stat => (
-                  <div key={stat.label}>
-                    <div style={{ fontSize: 10, color: theme.textFaint, marginBottom: 2, textTransform: "uppercase", letterSpacing: "0.05em" }}>{stat.label}</div>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: theme.text, fontFamily: "'JetBrains Mono', monospace" }}>{stat.val}</div>
-                  </div>
-                ))}
-              </div>
             </div>
           </div>
         </div>
+  );
+
+  if (heroMode) return card;
+
+  return (
+    <section id="demo-section" style={{ padding: "96px 24px", backgroundColor: theme.bg }}>
+      <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+        <div style={{ textAlign: "center", marginBottom: 56 }}>
+          <span style={{
+            display: "inline-block", padding: "6px 16px", borderRadius: 999,
+            background: `${theme.primary}18`, border: `1px solid ${theme.primary}30`,
+            color: theme.primary, fontSize: 12, fontWeight: 600, letterSpacing: "0.08em",
+            textTransform: "uppercase" as const, marginBottom: 20,
+          }}>Live Demo</span>
+          <h2 style={{ fontSize: "clamp(2rem, 4vw, 2.75rem)", fontWeight: 800, lineHeight: 1.15, margin: "0 0 16px", letterSpacing: "-0.03em", color: theme.text }}>
+            Watch Navigator think and act
+          </h2>
+          <p style={{ fontSize: 17, color: theme.textMuted, maxWidth: 500, margin: "0 auto" }}>
+            Real tool calls. Real API execution. Not scripted — this is the actual agent loop running live.
+          </p>
+        </div>
+        {card}
       </div>
+    </section>
+  );
+}
+
+// ─── Built for Scale ──────────────────────────────────────────────────────────
+function ScaleSection({ theme }: { theme: Theme }) {
+  const t = theme;
+  const W = 1200, H = 620, CX = 600, CY = 310;
+  const a1 = t.accent1, a2 = t.accent2;
+
+  // Polar helper
+  const p = (r: number, deg: number) => ({
+    x: Math.round(CX + r * Math.cos((deg * Math.PI) / 180)),
+    y: Math.round(CY + r * Math.sin((deg * Math.PI) / 180)),
+  });
+
+  // Nodes: centre, inner ring (r=130, 6), mid ring (r=235, 8), scatter (r=310-340)
+  const NODES = [
+    { ...{ x: CX, y: CY }, r: 9.5, hub: true },        // 0 centre
+    { ...p(130,  0),  r: 5.5, hub: true },              // 1
+    { ...p(130, 60),  r: 5.5, hub: true },              // 2
+    { ...p(130,120),  r: 5.5, hub: true },              // 3
+    { ...p(130,180),  r: 5.5, hub: true },              // 4
+    { ...p(130,240),  r: 5.5, hub: true },              // 5
+    { ...p(130,300),  r: 5.5, hub: true },              // 6
+    { ...p(235, 22),  r: 3.5 },                         // 7
+    { ...p(235, 67),  r: 3.5 },                         // 8
+    { ...p(235,112),  r: 3.5 },                         // 9
+    { ...p(235,157),  r: 3.5 },                         // 10
+    { ...p(235,202),  r: 3.5 },                         // 11
+    { ...p(235,247),  r: 3.5 },                         // 12
+    { ...p(235,292),  r: 3.5 },                         // 13
+    { ...p(235,337),  r: 3.5 },                         // 14
+    { ...p(315, 10),  r: 2.5 },                         // 15
+    { ...p(315, 55),  r: 2.5 },                         // 16
+    { ...p(315, 95),  r: 2.5 },                         // 17
+    { ...p(315,140),  r: 2.5 },                         // 18
+    { ...p(315,185),  r: 2.5 },                         // 19
+    { ...p(315,225),  r: 2.5 },                         // 20
+    { ...p(315,270),  r: 2.5 },                         // 21
+    { ...p(315,315),  r: 2.5 },                         // 22
+    { ...p(60,  30),  r: 3 },                           // 23 inner cluster
+    { ...p(60, 150),  r: 3 },                           // 24
+    { ...p(60, 270),  r: 3 },                           // 25
+  ];
+
+  const EDGES: [number, number][] = [
+    // centre spokes
+    [0,1],[0,2],[0,3],[0,4],[0,5],[0,6],
+    // inner cluster
+    [0,23],[0,24],[0,25],[23,1],[23,6],[24,3],[24,2],[25,4],[25,5],
+    // inner → mid
+    [1,7],[1,14],[2,7],[2,8],[3,8],[3,9],[4,9],[4,10],[5,10],[5,11],[6,11],[6,12],[1,13],[6,13],
+    // mid ring lateral
+    [7,8],[8,9],[9,10],[10,11],[11,12],[12,13],[13,14],[14,7],
+    // mid → outer
+    [7,15],[7,14],[8,16],[9,17],[10,18],[11,19],[12,20],[13,21],[14,22],[6,22],[1,15],
+    // outer ring connections
+    [15,16],[16,17],[17,18],[18,19],[20,21],[21,22],[22,15],
+  ];
+
+  // Metrics (SVG coordinate positions — outside the node clusters)
+  const METRICS = [
+    { val: "2,408+",  label: "APIs Connected",           x:  72, y: 148, anchor: "start"  },
+    { val: "143K+",   label: "Tools Generated",          x: 1128, y: 110, anchor: "end"   },
+    { val: "38M+",    label: "Knowledge Chunks Indexed", x: 1148, y: 358, anchor: "end"   },
+    { val: "18M+",    label: "Actions Executed",         x:  52,  y: 488, anchor: "start" },
+    { val: "98.7%",   label: "Success Rate",             x:  600, y: 592, anchor: "middle"},
+  ];
+
+  const nc = t.isDark ? "rgba(88,236,255,0.10)" : "rgba(30,79,170,0.13)";
+  const ns = t.isDark ? "rgba(88,236,255,0.45)" : "rgba(30,79,170,0.70)";
+  const lc = t.isDark ? "rgba(88,236,255,0.09)" : "rgba(30,79,170,0.22)";
+
+  return (
+    <section style={{
+      padding: "100px 0 80px", position: "relative", overflow: "hidden",
+    }}>
+      {/* Central radial glow */}
+      <div style={{
+        position: "absolute", top: "50%", left: "50%",
+        transform: "translate(-50%, -50%)",
+        width: "55%", paddingBottom: "32%", borderRadius: "50%",
+        background: t.isDark
+          ? `radial-gradient(ellipse, ${a1}0f 0%, ${a2}06 45%, transparent 72%)`
+          : `radial-gradient(ellipse, ${a1}0a 0%, transparent 65%)`,
+        pointerEvents: "none",
+      }} />
+
+      {/* Section label + heading */}
+      <motion.div
+        initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }} transition={{ duration: 0.55 }}
+        style={{ textAlign: "center", marginBottom: 16, position: "relative" }}
+      >
+        <span style={{
+          display: "inline-block", padding: "6px 16px", borderRadius: 999,
+          background: `${t.primary}18`, border: `1px solid ${t.primary}30`,
+          color: t.primary, fontSize: 12, fontWeight: 600,
+          letterSpacing: "0.08em", textTransform: "uppercase" as const, marginBottom: 20,
+        }}>Built for Scale</span>
+        <h2 style={{
+          fontSize: "clamp(2rem, 3.8vw, 2.8rem)", fontWeight: 800, lineHeight: 1.15,
+          margin: "0 0 14px", letterSpacing: "-0.03em",
+        }}>
+          Intelligence operating at{" "}
+          <span className={t.isDark ? "shimmer-dark" : "shimmer-light"}>planetary scale</span>
+        </h2>
+        <p style={{ fontSize: 16, color: t.textMuted, maxWidth: 480, margin: "0 auto", lineHeight: 1.65 }}>
+          Every API call, tool invocation, and knowledge retrieval — flowing through one platform, live.
+        </p>
+      </motion.div>
+
+      {/* Network SVG */}
+      <motion.div
+        initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}
+        viewport={{ once: true }} transition={{ duration: 1.2, delay: 0.2 }}
+        style={{ position: "relative", maxWidth: 1200, margin: "0 auto", padding: "0 20px" }}
+      >
+        <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: "auto", display: "block", overflow: "visible" }}>
+          <defs>
+            <filter id="sc-node-glow" x="-120%" y="-120%" width="340%" height="340%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="b" />
+              <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+            </filter>
+            <filter id="sc-hub-glow" x="-150%" y="-150%" width="400%" height="400%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="b" />
+              <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+            </filter>
+            <radialGradient id="sc-centre-glow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor={a1} stopOpacity="0.18" />
+              <stop offset="100%" stopColor={a1} stopOpacity="0" />
+            </radialGradient>
+          </defs>
+
+          {/* Soft glow behind centre */}
+          <ellipse cx={CX} cy={CY} rx={180} ry={140} fill="url(#sc-centre-glow)" />
+
+          {/* Edges */}
+          {EDGES.map(([a, b], i) => (
+            <line key={i}
+              x1={NODES[a].x} y1={NODES[a].y}
+              x2={NODES[b].x} y2={NODES[b].y}
+              stroke={lc} strokeWidth={0.7} strokeLinecap="round"
+            />
+          ))}
+
+          {/* Animated particles along edges */}
+          {EDGES.filter((_, i) => i % 2 === 0).map(([a, b], i) => {
+            const na = NODES[a], nb = NODES[b];
+            const fwd = i % 3 !== 0;
+            const [fx, tx] = fwd ? [na.x, nb.x] : [nb.x, na.x];
+            const [fy, ty] = fwd ? [na.y, nb.y] : [nb.y, na.y];
+            const dur = 1.4 + (i % 6) * 0.28;
+            const delay = (i * 0.41) % 4.5;
+            return (
+              <motion.circle key={i} r={1.8} fill={a1}
+                animate={{ cx: [fx, tx], cy: [fy, ty], opacity: [0, 1, 1, 0] }}
+                transition={{ duration: dur, repeat: Infinity, repeatDelay: delay, ease: "easeInOut", times: [0, 0.08, 0.92, 1] }}
+                style={{ filter: `drop-shadow(0 0 4px ${a1}) drop-shadow(0 0 8px ${a2}80)` }}
+              />
+            );
+          })}
+
+          {/* Nodes */}
+          {NODES.map((node, i) => (
+            <g key={i}>
+              {/* Pulse ring */}
+              <motion.circle cx={node.x} cy={node.y}
+                animate={{
+                  r: [node.r + 1.5, node.r + (node.hub ? 16 : 9), node.r + 1.5],
+                  opacity: [t.isDark ? 0.4 : 0.55, 0, t.isDark ? 0.4 : 0.55],
+                }}
+                transition={{ duration: 2.6 + (i % 5) * 0.35, repeat: Infinity, ease: "easeInOut", delay: i * 0.16 }}
+                fill="none" stroke={a1} strokeWidth={t.isDark ? "0.5" : "0.9"}
+              />
+              {/* Node body */}
+              <circle cx={node.x} cy={node.y} r={node.r}
+                fill={nc} stroke={ns} strokeWidth={node.hub ? (t.isDark ? 0.9 : 1.4) : (t.isDark ? 0.6 : 1.0)}
+                filter={node.hub ? "url(#sc-node-glow)" : undefined}
+              />
+              {/* Hub core */}
+              {node.hub && (
+                <circle cx={node.x} cy={node.y} r={node.r * 0.4}
+                  fill={a1} fillOpacity={t.isDark ? 0.85 : 0.95}
+                  filter="url(#sc-hub-glow)"
+                />
+              )}
+            </g>
+          ))}
+
+          {/* Metric labels — rendered in SVG so they scale with the network */}
+          {METRICS.map((m, i) => (
+            <motion.g key={i}
+              initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}
+              viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.3 + i * 0.12 }}
+            >
+              <text
+                x={m.x} y={m.y}
+                textAnchor={m.anchor as React.SVGAttributes<SVGTextElement>["textAnchor"]}
+                fontFamily="'Plus Jakarta Sans', sans-serif"
+                fontWeight="800"
+                fontSize="46"
+                fill={t.text}
+                letterSpacing="-1"
+              >{m.val}</text>
+              <text
+                x={m.x} y={m.y + 24}
+                textAnchor={m.anchor as React.SVGAttributes<SVGTextElement>["textAnchor"]}
+                fontFamily="'Plus Jakarta Sans', sans-serif"
+                fontWeight="500"
+                fontSize="14"
+                fill={t.isDark ? "rgba(180,195,225,0.6)" : "rgba(28,32,50,0.68)"}
+                letterSpacing="0.5"
+              >{m.label}</text>
+            </motion.g>
+          ))}
+        </svg>
+      </motion.div>
     </section>
   );
 }
@@ -718,17 +1189,17 @@ function TestimonialsSection({ theme }: { theme: Theme }) {
                 position: "relative", overflow: "hidden",
                 boxShadow: (item as any).featured
                   ? t.isDark
-                    ? "0 0 80px rgba(168,85,247,0.08), 0 0 0 1px rgba(168,85,247,0.1)"
-                    : "0 8px 48px rgba(124,58,237,0.12), 0 2px 8px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.95)"
+                    ? "0 0 80px rgba(160,178,215,0.10), 0 0 0 1px rgba(180,195,225,0.12)"
+                    : "0 8px 48px rgba(100,118,158,0.12), 0 2px 8px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.95)"
                   : t.isDark
                     ? "none"
-                    : "0 4px 24px rgba(80,40,180,0.07), inset 0 1px 0 rgba(255,255,255,0.9)",
+                    : "0 4px 24px rgba(100,118,158,0.07), inset 0 1px 0 rgba(255,255,255,0.9)",
               }}
             >
               {(item as any).featured && (
                 <div style={{
                   position: "absolute", top: 0, left: "12%", right: "12%", height: 1,
-                  background: "linear-gradient(90deg, transparent, rgba(168,85,247,0.45), rgba(96,165,250,0.45), transparent)",
+                  background: "linear-gradient(90deg, transparent, rgba(190,205,230,0.7), rgba(220,228,242,0.7), transparent)",
                 }} />
               )}
               <div style={{ display: "flex", gap: 3, marginBottom: 20 }}>
@@ -750,7 +1221,7 @@ function TestimonialsSection({ theme }: { theme: Theme }) {
                 }}>{item.initials}</div>
                 <div>
                   <div style={{ fontSize: 14, fontWeight: 700, color: t.text }}>{item.name}</div>
-                  <div style={{ fontSize: 12, color: t.textMuted }}>{item.title} · {item.company}</div>
+                  <div style={{ fontSize: 13.5, color: t.textMuted }}>{item.title} · {item.company}</div>
                 </div>
               </div>
             </motion.div>
@@ -775,7 +1246,7 @@ function FAQSection({ theme }: { theme: Theme }) {
   );
 
   return (
-    <section style={{ padding: "96px 24px", background: t.isDark ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.52)", backdropFilter: t.isDark ? undefined : "blur(24px)", WebkitBackdropFilter: t.isDark ? undefined : "blur(24px)" }}>
+    <section style={{ padding: "96px 24px" }}>
       <div style={{ maxWidth: 760, margin: "0 auto" }}>
         <div style={{ textAlign: "center", marginBottom: 64 }}>
           {pill("FAQ")}
@@ -840,12 +1311,61 @@ function WidgetCustomizer({ theme }: { theme: Theme }) {
   const [config, setConfig] = useState<WidgetConfig>({
     brandName: "Acme Corp",
     logoText: "⚡",
+    logoImage: "",
     brandColor: "#7C3AED",
     position: "right",
     widgetTheme: "light",
     greeting: "Hi! I'm your AI assistant. How can I help you today?",
   });
   const [widgetOpen, setWidgetOpen] = useState(true);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [chatMessages, setChatMessages] = useState<Array<{ role: "user" | "assistant"; text: string }>>([
+    { role: "assistant", text: "Hi! I'm your AI assistant. How can I help you today?" },
+  ]);
+  const [chatInput, setChatInput] = useState("");
+  const [chatTyping, setChatTyping] = useState(false);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setChatMessages(prev => {
+      const updated = [...prev];
+      updated[0] = { role: "assistant", text: config.greeting };
+      return updated;
+    });
+  }, [config.greeting]);
+
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }, [chatMessages, chatTyping]);
+
+  function getWidgetReply(msg: string): string {
+    const lower = msg.toLowerCase();
+    const brand = config.brandName || "us";
+    if (/(hi|hello|hey)\b/.test(lower)) return `Hey there! 👋 How can I help you with ${brand} today?`;
+    if (lower.includes("upgrade") || lower.includes("enterprise") || lower.includes("plan"))
+      return `I can handle that right now! Want me to walk you through ${brand}'s plan options?`;
+    if (lower.includes("price") || lower.includes("cost") || lower.includes("pricing"))
+      return `Plans start at $29/month. Want me to break down what's included at each tier?`;
+    if (lower.includes("cancel") || lower.includes("refund"))
+      return `Got it. Let me pull up your account so we can sort this out quickly.`;
+    if (lower.includes("help") || lower.includes("support"))
+      return `Absolutely! I'm here for anything on ${brand}. What do you need?`;
+    return `Got it! Let me look into that for you. Is there anything else I can help with on ${brand}?`;
+  }
+
+  function sendChat() {
+    const text = chatInput.trim();
+    if (!text || chatTyping) return;
+    setChatInput("");
+    setChatMessages(m => [...m, { role: "user", text }]);
+    setChatTyping(true);
+    setTimeout(() => {
+      setChatMessages(m => [...m, { role: "assistant", text: getWidgetReply(text) }]);
+      setChatTyping(false);
+    }, 700 + Math.random() * 500);
+  }
 
   const set = (key: keyof WidgetConfig, val: string) =>
     setConfig(c => ({ ...c, [key]: val }));
@@ -857,7 +1377,7 @@ function WidgetCustomizer({ theme }: { theme: Theme }) {
   const wSurface = config.widgetTheme === "dark" ? "#2C2C2E" : "#F4F4F5";
 
   const fieldLabel = (text: string) => (
-    <div style={{ fontSize: 11, fontWeight: 700, color: t.textMuted, textTransform: "uppercase" as const, letterSpacing: "0.07em", marginBottom: 9 }}>
+    <div style={{ fontSize: 10.5, fontWeight: 700, color: t.textMuted, textTransform: "uppercase" as const, letterSpacing: "0.07em", marginBottom: 7 }}>
       {text}
     </div>
   );
@@ -869,9 +1389,32 @@ function WidgetCustomizer({ theme }: { theme: Theme }) {
     fontFamily: "'Plus Jakarta Sans', sans-serif", boxSizing: "border-box" as const,
   };
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => set("logoImage", ev.target?.result as string ?? "");
+    reader.readAsDataURL(file);
+  };
+
+  /* Avatar renders image if uploaded, else emoji/text */
+  const Avatar = ({ size, fontSize }: { size: number; fontSize: number }) => (
+    <div style={{
+      width: size, height: size, borderRadius: 9999, flexShrink: 0,
+      background: config.logoImage ? "none" : config.brandColor,
+      display: "flex", alignItems: "center", justifyContent: "center",
+      fontSize, color: "#fff", overflow: "hidden",
+      transition: "background 0.25s ease",
+    }}>
+      {config.logoImage
+        ? <img src={config.logoImage} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        : (config.logoText?.[0] || "N")}
+    </div>
+  );
+
   return (
-    <section style={{ padding: "96px 24px", background: t.isDark ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.52)", backdropFilter: t.isDark ? undefined : "blur(24px)", WebkitBackdropFilter: t.isDark ? undefined : "blur(24px)" }}>
-      <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+    <section style={{ padding: "96px 24px" }}>
+      <div style={{ maxWidth: 1280, margin: "0 auto" }}>
         <div style={{ textAlign: "center", marginBottom: 60 }}>
           <span style={{
             display: "inline-block", padding: "6px 16px", borderRadius: 999,
@@ -887,311 +1430,330 @@ function WidgetCustomizer({ theme }: { theme: Theme }) {
           </p>
         </div>
 
-        <div className="grid-customizer" style={{ display: "grid", gridTemplateColumns: "340px 1fr", gap: 20, alignItems: "start" }}>
+        <div className="grid-customizer" style={{ display: "grid", gridTemplateColumns: "3fr 7fr", gap: 24, alignItems: "stretch" }}>
 
-          {/* ── Controls panel ── */}
+          {/* ── LEFT: Controls ── */}
           <div style={{
             background: t.isDark ? "rgba(255,255,255,0.03)" : "white",
-            border: `1px solid ${t.border}`, borderRadius: 20, padding: 24,
-            display: "flex", flexDirection: "column", gap: 22,
+            border: `1px solid ${t.border}`, borderRadius: 20, padding: "18px 20px",
+            display: "flex", flexDirection: "column", gap: 16,
           }}>
 
-            {/* Brand name */}
-            <div>
-              {fieldLabel("Brand Name")}
-              <input value={config.brandName} onChange={e => set("brandName", e.target.value)} maxLength={28} placeholder="Your company name" style={inputBase} />
-            </div>
-
-            {/* Logo / emoji */}
-            <div>
-              {fieldLabel("Logo — emoji or initials")}
-              <div style={{ display: "flex", gap: 7, marginBottom: 10, flexWrap: "wrap" }}>
-                {["⚡", "🤖", "💬", "✨", "🔮", "🚀"].map(em => (
-                  <button key={em} onClick={() => set("logoText", em)} style={{
-                    width: 38, height: 38, borderRadius: 10, fontSize: 18, cursor: "pointer",
-                    background: config.logoText === em ? `${t.primary}14` : (t.isDark ? "rgba(255,255,255,0.05)" : t.surface2),
-                    border: `1px solid ${config.logoText === em ? t.primary + "50" : t.border}`,
-                    transition: "all 0.15s",
-                  }}>{em}</button>
-                ))}
+              {/* Brand name */}
+              <div>
+                {fieldLabel("Brand Name")}
+                <input value={config.brandName} onChange={e => set("brandName", e.target.value)} maxLength={28} placeholder="Your company name" style={inputBase} />
               </div>
-              <input value={config.logoText} onChange={e => set("logoText", e.target.value.slice(0, 3))} placeholder="or type custom…" style={{ ...inputBase, fontSize: 18 }} />
-            </div>
 
-            {/* Brand color */}
-            <div>
-              {fieldLabel("Brand Colour")}
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
-                {COLOR_PRESETS.map(color => (
-                  <button key={color} onClick={() => set("brandColor", color)} style={{
-                    width: 30, height: 30, borderRadius: 9999, background: color,
-                    border: `2px solid ${config.brandColor === color ? t.primary : "transparent"}`,
-                    outline: config.brandColor === color ? `2px solid ${t.isDark ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.22)"}` : "none",
-                    outlineOffset: 2, cursor: "pointer", padding: 0, transition: "outline 0.15s, border 0.15s",
-                  }} />
-                ))}
-              </div>
-              <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                <input type="color" value={config.brandColor} onChange={e => set("brandColor", e.target.value)}
-                  style={{ width: 38, height: 38, borderRadius: 9, border: `1px solid ${t.border}`, cursor: "pointer", padding: 3, background: "none", flexShrink: 0 }}
-                />
-                <input value={config.brandColor}
-                  onChange={e => { if (/^#[0-9A-Fa-f]{0,6}$/.test(e.target.value)) set("brandColor", e.target.value); }}
-                  style={{ ...inputBase, flex: 1, fontFamily: "'JetBrains Mono', monospace", fontSize: 13, padding: "9px 12px" }}
-                />
-              </div>
-            </div>
-
-            {/* Position */}
-            <div>
-              {fieldLabel("Position")}
-              <div style={{ display: "flex", gap: 8 }}>
-                {(["left", "right"] as const).map(pos => (
-                  <button key={pos} onClick={() => set("position", pos)} style={{
-                    flex: 1, padding: "9px 0", borderRadius: 10, cursor: "pointer",
-                    border: `1px solid ${config.position === pos ? t.primary + "55" : t.border}`,
-                    background: config.position === pos ? `${t.primary}10` : "transparent",
-                    color: config.position === pos ? t.primary : t.textMuted,
-                    fontSize: 13, fontWeight: 600, fontFamily: "'Plus Jakarta Sans', sans-serif",
-                    transition: "all 0.15s",
-                  }}>
-                    {pos === "left" ? "↙ Bottom Left" : "↘ Bottom Right"}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Widget theme */}
-            <div>
-              {fieldLabel("Widget Theme")}
-              <div style={{ display: "flex", gap: 8 }}>
-                {(["light", "dark"] as const).map(wt => (
-                  <button key={wt} onClick={() => set("widgetTheme", wt)} style={{
-                    flex: 1, padding: "9px 0", borderRadius: 10, cursor: "pointer",
-                    border: `1px solid ${config.widgetTheme === wt ? t.primary + "55" : t.border}`,
-                    background: config.widgetTheme === wt ? `${t.primary}10` : "transparent",
-                    color: config.widgetTheme === wt ? t.primary : t.textMuted,
-                    fontSize: 13, fontWeight: 600, fontFamily: "'Plus Jakarta Sans', sans-serif",
-                    transition: "all 0.15s",
-                  }}>
-                    {wt === "light" ? "○  Light" : "◑  Dark"}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Opening message */}
-            <div>
-              {fieldLabel("Opening Message")}
-              <textarea value={config.greeting} onChange={e => set("greeting", e.target.value)} maxLength={120} rows={3}
-                style={{ ...inputBase, resize: "none", lineHeight: 1.55 } as React.CSSProperties}
-              />
-            </div>
-          </div>
-
-          {/* ── Preview + code ── */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-
-            {/* Browser preview */}
-            <div style={{
-              background: t.isDark ? "rgba(255,255,255,0.02)" : "#EBEBEB",
-              border: `1px solid ${t.border}`, borderRadius: 20, overflow: "hidden",
-            }}>
-              {/* Chrome bar */}
-              <div style={{
-                padding: "11px 16px", borderBottom: `1px solid ${t.border}`,
-                background: t.isDark ? "rgba(0,0,0,0.4)" : "white",
-                display: "flex", alignItems: "center", gap: 10,
-              }}>
-                <div style={{ display: "flex", gap: 5 }}>
-                  {["#FF5F57", "#FEBC2E", "#28C840"].map((c, i) => (
-                    <div key={i} style={{ width: 10, height: 10, borderRadius: 9999, background: c }} />
-                  ))}
+              {/* Logo */}
+              <div>
+                {fieldLabel("Logo")}
+                {/* Image upload row */}
+                <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 12 }}>
+                  <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} style={{ display: "none" }} />
+                  {config.logoImage ? (
+                    <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+                      <img src={config.logoImage} alt="logo" style={{ width: 36, height: 36, borderRadius: 9999, objectFit: "cover", border: `2px solid ${t.primary}55` }} />
+                      <button onClick={() => { set("logoImage", ""); if (fileInputRef.current) fileInputRef.current.value = ""; }} style={{
+                        padding: "5px 12px", borderRadius: 8, fontSize: 12, cursor: "pointer",
+                        background: "transparent", border: `1px solid ${t.border}`, color: t.textMuted,
+                        fontFamily: "'Plus Jakarta Sans', sans-serif",
+                      }}>Remove</button>
+                      <button onClick={() => fileInputRef.current?.click()} style={{
+                        padding: "5px 12px", borderRadius: 8, fontSize: 12, cursor: "pointer",
+                        background: `${t.primary}12`, border: `1px solid ${t.primary}40`, color: t.primary,
+                        fontFamily: "'Plus Jakarta Sans', sans-serif",
+                      }}>Change</button>
+                    </div>
+                  ) : (
+                    <button onClick={() => fileInputRef.current?.click()} style={{
+                      display: "flex", alignItems: "center", gap: 7,
+                      padding: "8px 14px", borderRadius: 10, fontSize: 13, cursor: "pointer",
+                      background: `${t.primary}10`, border: `1px solid ${t.primary}35`, color: t.primary,
+                      fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 600,
+                    }}>
+                      <Upload size={13} /> Upload image
+                    </button>
+                  )}
                 </div>
-                <div style={{
-                  flex: 1, background: t.isDark ? "rgba(255,255,255,0.07)" : t.surface2,
-                  borderRadius: 6, padding: "4px 12px", fontSize: 11,
-                  color: t.textFaint, fontFamily: "'JetBrains Mono', monospace", textAlign: "center",
-                }}>
-                  {(config.brandName || "yourproduct").toLowerCase().replace(/\s+/g, "")}.com/dashboard
-                </div>
-                <div style={{ width: 52 }} />
-              </div>
-
-              {/* Fake page content */}
-              <div style={{ position: "relative", height: 460 }}>
-                <div style={{ padding: "26px 30px", pointerEvents: "none", userSelect: "none" }}>
-                  <div style={{ opacity: 0.22 }}>
-                    <div style={{ height: 18, background: t.text, borderRadius: 4, width: "36%", marginBottom: 10 }} />
-                    <div style={{ height: 10, background: t.textMuted, borderRadius: 3, width: "62%", marginBottom: 6 }} />
-                    <div style={{ height: 10, background: t.textMuted, borderRadius: 3, width: "48%", marginBottom: 20 }} />
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
-                      {[...Array(3)].map((_, i) => (
-                        <div key={i} style={{ height: 72, background: t.isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)", borderRadius: 8, border: `1px solid ${t.border}` }} />
+                {/* Emoji presets + custom text (only when no image) */}
+                {!config.logoImage && (
+                  <>
+                    <div style={{ display: "flex", gap: 7, marginBottom: 10, flexWrap: "wrap" }}>
+                      {["⚡", "🤖", "💬", "✨", "🔮", "🚀"].map(em => (
+                        <button key={em} onClick={() => set("logoText", em)} style={{
+                          width: 38, height: 38, borderRadius: 10, fontSize: 18, cursor: "pointer",
+                          background: config.logoText === em ? `${t.primary}14` : (t.isDark ? "rgba(255,255,255,0.05)" : t.surface2),
+                          border: `1px solid ${config.logoText === em ? t.primary + "50" : t.border}`,
+                          transition: "all 0.15s",
+                        }}>{em}</button>
                       ))}
                     </div>
-                    <div style={{ marginTop: 18, height: 10, background: t.textMuted, borderRadius: 3, width: "78%" }} />
-                    <div style={{ marginTop: 7, height: 10, background: t.textMuted, borderRadius: 3, width: "58%" }} />
-                    <div style={{ marginTop: 7, height: 10, background: t.textMuted, borderRadius: 3, width: "70%" }} />
-                  </div>
+                    <input value={config.logoText} onChange={e => set("logoText", e.target.value.slice(0, 3))} placeholder="or type custom…" style={{ ...inputBase, fontSize: 18 }} />
+                  </>
+                )}
+              </div>
+
+              {/* Brand color */}
+              <div>
+                {fieldLabel("Brand Colour")}
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
+                  {COLOR_PRESETS.map(color => (
+                    <button key={color} onClick={() => set("brandColor", color)} style={{
+                      width: 30, height: 30, borderRadius: 9999, background: color,
+                      border: `2px solid ${config.brandColor === color ? t.primary : "transparent"}`,
+                      outline: config.brandColor === color ? `2px solid ${t.isDark ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.22)"}` : "none",
+                      outlineOffset: 2, cursor: "pointer", padding: 0, transition: "outline 0.15s, border 0.15s",
+                    }} />
+                  ))}
                 </div>
-
-                {/* Chat window */}
-                <AnimatePresence>
-                  {widgetOpen && (
-                    <motion.div
-                      key="chat-window"
-                      initial={{ opacity: 0, y: 14, scale: 0.96 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 10, scale: 0.96 }}
-                      transition={{ duration: 0.22, ease: "easeOut" }}
-                      style={{
-                        position: "absolute", bottom: 70,
-                        [config.position]: 14,
-                        width: 286, borderRadius: 16, overflow: "hidden",
-                        boxShadow: `0 8px 40px rgba(0,0,0,0.22), 0 0 0 1px ${wBorder}`,
-                        background: wBg, zIndex: 10,
-                      }}
-                    >
-                      {/* Widget header */}
-                      <div style={{ padding: "12px 14px", background: config.brandColor, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
-                          <div style={{
-                            width: 30, height: 30, borderRadius: 9999,
-                            background: "rgba(255,255,255,0.2)",
-                            display: "flex", alignItems: "center", justifyContent: "center",
-                            fontSize: 14,
-                          }}>{config.logoText?.[0] || "N"}</div>
-                          <div>
-                            <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", lineHeight: 1.2 }}>{config.brandName || "Navigator"}</div>
-                            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.7)", display: "flex", alignItems: "center", gap: 4, marginTop: 1 }}>
-                              <span style={{ width: 5, height: 5, borderRadius: 9999, background: "#4ade80", display: "inline-block" }} />
-                              Online now
-                            </div>
-                          </div>
-                        </div>
-                        <button onClick={() => setWidgetOpen(false)} style={{
-                          background: "rgba(255,255,255,0.18)", border: "none", borderRadius: 9999,
-                          width: 22, height: 22, cursor: "pointer", color: "#fff", fontSize: 13,
-                          display: "flex", alignItems: "center", justifyContent: "center",
-                        }}>✕</button>
-                      </div>
-
-                      {/* Messages */}
-                      <div style={{ padding: "12px 11px", display: "flex", flexDirection: "column", gap: 9 }}>
-                        <div style={{ display: "flex", gap: 7, alignItems: "flex-end" }}>
-                          <div style={{
-                            width: 24, height: 24, borderRadius: 9999, flexShrink: 0,
-                            background: config.brandColor,
-                            display: "flex", alignItems: "center", justifyContent: "center",
-                            fontSize: 10, color: "#fff",
-                          }}>{config.logoText?.[0] || "N"}</div>
-                          <div style={{
-                            background: wSurface, border: `1px solid ${wBorder}`,
-                            borderRadius: "10px 10px 10px 3px",
-                            padding: "8px 11px", fontSize: 12, lineHeight: 1.5,
-                            color: wText, maxWidth: 195,
-                          }}>{config.greeting}</div>
-                        </div>
-                        <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                          <div style={{
-                            background: config.brandColor, borderRadius: "10px 10px 3px 10px",
-                            padding: "8px 11px", fontSize: 12, lineHeight: 1.5,
-                            color: "#fff", maxWidth: 175,
-                          }}>How do I upgrade my plan?</div>
-                        </div>
-                        <div style={{ display: "flex", gap: 7, alignItems: "flex-end" }}>
-                          <div style={{
-                            width: 24, height: 24, borderRadius: 9999, flexShrink: 0,
-                            background: config.brandColor,
-                            display: "flex", alignItems: "center", justifyContent: "center",
-                            fontSize: 10, color: "#fff",
-                          }}>{config.logoText?.[0] || "N"}</div>
-                          <div style={{
-                            background: wSurface, border: `1px solid ${wBorder}`,
-                            borderRadius: "10px 10px 10px 3px",
-                            padding: "8px 11px", fontSize: 12, lineHeight: 1.5,
-                            color: wText, maxWidth: 195,
-                          }}>I can upgrade you right now! You're on Pro — want to switch to Enterprise?</div>
-                        </div>
-                      </div>
-
-                      {/* Input bar */}
-                      <div style={{ padding: "9px 11px", borderTop: `1px solid ${wBorder}` }}>
-                        <div style={{
-                          display: "flex", gap: 7, padding: "7px 11px", alignItems: "center",
-                          background: wSurface, borderRadius: 9, border: `1px solid ${wBorder}`,
-                        }}>
-                          <span style={{ flex: 1, fontSize: 12, color: wMuted }}>Ask me anything…</span>
-                          <div style={{
-                            width: 20, height: 20, borderRadius: 9999, background: config.brandColor,
-                            display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-                          }}>
-                            <ArrowRight size={10} color="#fff" />
-                          </div>
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                {/* Floating bubble */}
-                <div style={{ position: "absolute", bottom: 14, [config.position]: 14, zIndex: 11 }}>
-                  <motion.button
-                    onClick={() => setWidgetOpen(o => !o)}
-                    whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.93 }}
-                    style={{
-                      width: 48, height: 48, borderRadius: 9999,
-                      background: config.brandColor, border: "none", cursor: "pointer",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      boxShadow: `0 4px 24px ${config.brandColor}55`,
-                      fontSize: 20, color: "#fff",
-                      transition: "background 0.2s, box-shadow 0.2s",
-                    }}
-                  >
-                    {widgetOpen ? "✕" : (config.logoText || "💬")}
-                  </motion.button>
+                <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                  <input type="color" value={config.brandColor} onChange={e => set("brandColor", e.target.value)}
+                    style={{ width: 38, height: 38, borderRadius: 9, border: `1px solid ${t.border}`, cursor: "pointer", padding: 3, background: "none", flexShrink: 0 }}
+                  />
+                  <input value={config.brandColor}
+                    onChange={e => { if (/^#[0-9A-Fa-f]{0,6}$/.test(e.target.value)) set("brandColor", e.target.value); }}
+                    style={{ ...inputBase, flex: 1, fontFamily: "'JetBrains Mono', monospace", fontSize: 13, padding: "9px 12px" }}
+                  />
                 </div>
+              </div>
+
+              {/* Position */}
+              <div>
+                {fieldLabel("Position")}
+                <div style={{ display: "flex", gap: 8 }}>
+                  {(["left", "right"] as const).map(pos => (
+                    <button key={pos} onClick={() => set("position", pos)} style={{
+                      flex: 1, padding: "9px 0", borderRadius: 10, cursor: "pointer",
+                      border: `1px solid ${config.position === pos ? t.primary + "55" : t.border}`,
+                      background: config.position === pos ? `${t.primary}10` : "transparent",
+                      color: config.position === pos ? t.primary : t.textMuted,
+                      fontSize: 13, fontWeight: 600, fontFamily: "'Plus Jakarta Sans', sans-serif",
+                      transition: "all 0.18s ease",
+                    }}>
+                      {pos === "left" ? "↙ Bottom Left" : "↘ Bottom Right"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Widget theme */}
+              <div>
+                {fieldLabel("Widget Theme")}
+                <div style={{ display: "flex", gap: 8 }}>
+                  {(["light", "dark"] as const).map(wt => (
+                    <button key={wt} onClick={() => set("widgetTheme", wt)} style={{
+                      flex: 1, padding: "9px 0", borderRadius: 10, cursor: "pointer",
+                      border: `1px solid ${config.widgetTheme === wt ? t.primary + "55" : t.border}`,
+                      background: config.widgetTheme === wt ? `${t.primary}10` : "transparent",
+                      color: config.widgetTheme === wt ? t.primary : t.textMuted,
+                      fontSize: 13, fontWeight: 600, fontFamily: "'Plus Jakarta Sans', sans-serif",
+                      transition: "all 0.18s ease",
+                    }}>
+                      {wt === "light" ? "○  Light" : "◑  Dark"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Opening message */}
+              <div>
+                {fieldLabel("Opening Message")}
+                <textarea value={config.greeting} onChange={e => set("greeting", e.target.value)} maxLength={120} rows={2}
+                  style={{ ...inputBase, resize: "none", lineHeight: 1.55 } as React.CSSProperties}
+                />
               </div>
             </div>
 
-            {/* Live embed code */}
+
+          {/* ── RIGHT: Large chat preview ── */}
+          <div style={{
+            background: t.isDark ? "rgba(255,255,255,0.02)" : "#EAECF2",
+            border: `1px solid ${t.border}`, borderRadius: 20, overflow: "hidden",
+            display: "flex", flexDirection: "column",
+          }}>
+            {/* Chrome bar */}
             <div style={{
-              background: t.isDark ? "rgba(255,255,255,0.03)" : "white",
-              border: `1px solid ${t.border}`, borderRadius: 16, overflow: "hidden",
+              padding: "11px 16px", borderBottom: `1px solid ${t.border}`,
+              background: t.isDark ? "rgba(0,0,0,0.4)" : "white",
+              display: "flex", alignItems: "center", gap: 10, flexShrink: 0,
             }}>
-              <div style={{
-                padding: "10px 16px", borderBottom: `1px solid ${t.border}`,
-                background: t.isDark ? "rgba(0,0,0,0.3)" : t.surface2,
-                display: "flex", alignItems: "center", gap: 10,
-              }}>
-                <div style={{ display: "flex", gap: 5 }}>
-                  {["#FF5F57", "#FEBC2E", "#28C840"].map((c, i) => (
-                    <div key={i} style={{ width: 9, height: 9, borderRadius: 9999, background: c }} />
-                  ))}
-                </div>
-                <span style={{ fontSize: 11, color: t.textFaint, fontFamily: "'JetBrains Mono', monospace" }}>
-                  Your embed code — updates as you customise
-                </span>
+              <div style={{ display: "flex", gap: 5 }}>
+                {["#FF5F57", "#FEBC2E", "#28C840"].map((c, i) => (
+                  <div key={i} style={{ width: 10, height: 10, borderRadius: 9999, background: c }} />
+                ))}
               </div>
-              <div style={{ padding: "18px 20px", fontFamily: "'JetBrains Mono', monospace", fontSize: 12, lineHeight: 1.9 }}>
-                <span style={{ color: t.primary }}>{"<script"}</span>{"\n"}
-                <span style={{ color: t.textFaint }}>{"  src"}</span>
-                <span style={{ color: t.textMuted }}>{`="https://cdn.navigator.ai/widget.js"`}</span>{"\n"}
-                <span style={{ color: t.textFaint }}>{"  data-api-key"}</span>
-                <span style={{ color: t.textMuted }}>{`="nav_live_xxxxxxxxxxxx"`}</span>{"\n"}
-                <span style={{ color: t.primary }}>{"  data-brand-name"}</span>
-                <span style={{ color: t.text }}>{`="${config.brandName || "Acme Corp"}"`}</span>{"\n"}
-                <span style={{ color: t.primary }}>{"  data-brand-color"}</span>
-                <span style={{ color: t.text }}>{`="${config.brandColor}"`}</span>{"\n"}
-                <span style={{ color: t.primary }}>{"  data-logo"}</span>
-                <span style={{ color: t.text }}>{`="${config.logoText || "⚡"}"`}</span>{"\n"}
-                <span style={{ color: t.primary }}>{"  data-position"}</span>
-                <span style={{ color: t.text }}>{`="${config.position}"`}</span>{"\n"}
-                <span style={{ color: t.primary }}>{"  data-theme"}</span>
-                <span style={{ color: t.text }}>{`="${config.widgetTheme}"`}</span>{"\n"}
-                <span style={{ color: t.primary }}>{">"}</span>
-                <span style={{ color: t.primary }}>{"</script>"}</span>
+              <div style={{
+                flex: 1, background: t.isDark ? "rgba(255,255,255,0.07)" : t.surface2,
+                borderRadius: 6, padding: "4px 12px", fontSize: 11,
+                color: t.textFaint, fontFamily: "'JetBrains Mono', monospace", textAlign: "center",
+              }}>
+                {(config.brandName || "yourproduct").toLowerCase().replace(/\s+/g, "")}.com/dashboard
+              </div>
+              <div style={{ width: 52 }} />
+            </div>
+
+            {/* Page + widget area */}
+            <div style={{ position: "relative", flex: 1 }}>
+              {/* Faint page skeleton */}
+              <div style={{ padding: "28px 32px", pointerEvents: "none", userSelect: "none" }}>
+                <div style={{ opacity: 0.18 }}>
+                  <div style={{ height: 16, background: t.text, borderRadius: 4, width: "28%", marginBottom: 10 }} />
+                  <div style={{ height: 9, background: t.textMuted, borderRadius: 3, width: "55%", marginBottom: 6 }} />
+                  <div style={{ height: 9, background: t.textMuted, borderRadius: 3, width: "40%", marginBottom: 22 }} />
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} style={{ height: 64, background: t.isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)", borderRadius: 8, border: `1px solid ${t.border}` }} />
+                    ))}
+                  </div>
+                  <div style={{ marginTop: 20, height: 9, background: t.textMuted, borderRadius: 3, width: "72%" }} />
+                  <div style={{ marginTop: 7, height: 9, background: t.textMuted, borderRadius: 3, width: "52%" }} />
+                  <div style={{ marginTop: 7, height: 9, background: t.textMuted, borderRadius: 3, width: "64%" }} />
+                </div>
+              </div>
+
+              {/* Chat window — large and prominent */}
+              <AnimatePresence>
+                {widgetOpen && (
+                  <motion.div
+                    key="chat-window"
+                    initial={{ opacity: 0, y: 18, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 12, scale: 0.95 }}
+                    transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+                    style={{
+                      position: "absolute", bottom: 86,
+                      [config.position]: 28,
+                      width: 380, borderRadius: 20, overflow: "hidden",
+                      boxShadow: `0 16px 56px rgba(0,0,0,0.28), 0 0 0 1px ${wBorder}`,
+                      background: wBg, zIndex: 10,
+                      transition: "background 0.3s ease, box-shadow 0.3s ease",
+                    }}
+                  >
+                    {/* Widget header */}
+                    <div style={{
+                      padding: "14px 16px", background: config.brandColor,
+                      display: "flex", alignItems: "center", justifyContent: "space-between",
+                      transition: "background 0.25s ease",
+                    }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <div style={{
+                          width: 36, height: 36, borderRadius: 9999,
+                          background: config.logoImage ? "none" : "rgba(255,255,255,0.22)",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          fontSize: 17, overflow: "hidden", flexShrink: 0,
+                          transition: "background 0.25s ease",
+                        }}>
+                          {config.logoImage
+                            ? <img src={config.logoImage} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                            : (config.logoText?.[0] || "N")}
+                        </div>
+                        <div>
+                          <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", lineHeight: 1.2 }}>{config.brandName || "Navigator"}</div>
+                          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.72)", display: "flex", alignItems: "center", gap: 4, marginTop: 2 }}>
+                            <span style={{ width: 6, height: 6, borderRadius: 9999, background: "#4ade80", display: "inline-block" }} />
+                            Online now
+                          </div>
+                        </div>
+                      </div>
+                      <button onClick={() => setWidgetOpen(false)} style={{
+                        background: "rgba(255,255,255,0.18)", border: "none", borderRadius: 9999,
+                        width: 26, height: 26, cursor: "pointer", color: "#fff", fontSize: 14,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                      }}>✕</button>
+                    </div>
+
+                    {/* Messages */}
+                    <div ref={chatContainerRef} style={{
+                      padding: "16px 14px", display: "flex", flexDirection: "column", gap: 12,
+                      overflowY: "auto", maxHeight: 420, flex: 1,
+                    }}>
+                      {chatMessages.map((msg, idx) => (
+                        <motion.div key={idx}
+                          initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
+                          style={{ display: "flex", gap: 9, alignItems: "flex-end", flexDirection: msg.role === "user" ? "row-reverse" : "row" }}
+                        >
+                          {msg.role === "assistant" && <Avatar size={28} fontSize={12} />}
+                          <div style={{
+                            background: msg.role === "user" ? config.brandColor : wSurface,
+                            border: msg.role === "user" ? "none" : `1px solid ${wBorder}`,
+                            borderRadius: msg.role === "user" ? "12px 12px 3px 12px" : "12px 12px 12px 3px",
+                            padding: "10px 13px", fontSize: 13, lineHeight: 1.55,
+                            color: msg.role === "user" ? "#fff" : wText, maxWidth: 220,
+                            transition: "background 0.25s ease, border-color 0.25s ease, color 0.25s ease",
+                          }}>{msg.text}</div>
+                        </motion.div>
+                      ))}
+                      {chatTyping && (
+                        <div style={{ display: "flex", gap: 9, alignItems: "flex-end" }}>
+                          <Avatar size={28} fontSize={12} />
+                          <div style={{
+                            background: wSurface, border: `1px solid ${wBorder}`,
+                            borderRadius: "12px 12px 12px 3px",
+                            padding: "10px 14px", display: "flex", gap: 4, alignItems: "center",
+                          }}>
+                            {[0, 1, 2].map(i => (
+                              <motion.div key={i} style={{ width: 5, height: 5, borderRadius: 9999, background: wMuted }}
+                                animate={{ opacity: [0.3, 1, 0.3] }}
+                                transition={{ duration: 0.8, repeat: Infinity, delay: i * 0.2 }}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Input bar */}
+                    <div style={{ padding: "11px 14px", borderTop: `1px solid ${wBorder}`, transition: "border-color 0.25s ease", flexShrink: 0 }}>
+                      <div style={{
+                        display: "flex", gap: 8, padding: "9px 13px", alignItems: "center",
+                        background: wSurface, borderRadius: 11, border: `1px solid ${wBorder}`,
+                        transition: "background 0.25s ease, border-color 0.25s ease",
+                      }}>
+                        <input
+                          value={chatInput}
+                          onChange={e => setChatInput(e.target.value)}
+                          onKeyDown={e => e.key === "Enter" && sendChat()}
+                          placeholder="Ask me anything…"
+                          style={{
+                            flex: 1, fontSize: 13, color: wText, background: "transparent",
+                            border: "none", outline: "none", fontFamily: "'Plus Jakarta Sans', sans-serif",
+                          }}
+                        />
+                        <button onClick={sendChat} style={{
+                          width: 24, height: 24, borderRadius: 9999, background: config.brandColor,
+                          display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                          border: "none", cursor: "pointer", transition: "background 0.25s ease",
+                        }}>
+                          <ArrowRight size={12} color="#fff" />
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Floating bubble */}
+              <div style={{ position: "absolute", bottom: 18, [config.position]: 20, zIndex: 11, transition: "left 0.3s ease, right 0.3s ease" }}>
+                <motion.button
+                  onClick={() => setWidgetOpen(o => !o)}
+                  whileHover={{ scale: 1.09 }} whileTap={{ scale: 0.92 }}
+                  style={{
+                    width: 54, height: 54, borderRadius: 9999,
+                    background: config.brandColor, border: "none", cursor: "pointer",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    boxShadow: `0 6px 28px ${config.brandColor}66`,
+                    fontSize: 22, color: "#fff",
+                    transition: "background 0.25s ease, box-shadow 0.25s ease",
+                    overflow: "hidden",
+                  }}
+                >
+                  {widgetOpen
+                    ? <span style={{ fontSize: 18 }}>✕</span>
+                    : (config.logoImage
+                        ? <img src={config.logoImage} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        : (config.logoText || "💬"))}
+                </motion.button>
               </div>
             </div>
           </div>
@@ -1202,62 +1764,107 @@ function WidgetCustomizer({ theme }: { theme: Theme }) {
 }
 
 // ─── Observatory Background ───────────────────────────────────────────────────
+// Deterministic star positions — no re-render jitter
+const STARS = Array.from({ length: 90 }, (_, i) => ({
+  x: ((i * 2654435761 + 1013904223) >>> 0) % 10000 / 100,
+  y: ((i * 1664525 + 1013904223) >>> 0) % 10000 / 100,
+  size: i % 7 === 0 ? 1.5 : i % 3 === 0 ? 1.0 : 0.55,
+  delay: (i * 0.19) % 5.5,
+  duration: 2.2 + (i % 7) * 0.55,
+}));
+
 function ObservatoryField({ theme }: { theme: Theme }) {
   return (
     <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0, overflow: "hidden" }}>
-      {/* Light mode: rich pastel gradient base so glass panels have color to refract */}
+      {/* Light mode: cool silver-chrome gradient base */}
       {!theme.isDark && (
         <div style={{
           position: "absolute", inset: 0,
-          background: "linear-gradient(145deg, #EAE5FF 0%, #E8F2FF 38%, #E5FBF5 70%, #FEE9F5 100%)",
+          background: "linear-gradient(150deg, #DDE1EC 0%, #E4E9F5 35%, #DCEAF6 65%, #E8EDF6 100%)",
         }} />
       )}
 
-      {/* Primary glow — purple, top center */}
+      {/* Primary glow — top center, breathing */}
       <div style={{
         position: "absolute",
-        top: theme.isDark ? "18%" : "0%",
-        left: "50%", transform: "translateX(-50%)",
-        width: theme.isDark ? 900 : 820,
-        height: theme.isDark ? 900 : 720,
+        top: theme.isDark ? "10%" : "-5%",
+        left: "50%",
+        transform: "translateX(-50%)",
+        width: theme.isDark ? 1000 : 860,
+        height: theme.isDark ? 900 : 760,
         background: theme.glow1,
-        filter: `blur(${theme.isDark ? 180 : 120}px)`,
+        filter: `blur(${theme.isDark ? 140 : 110}px)`,
         borderRadius: "50%",
+        animation: "orb-breathe 8s ease-in-out infinite",
       }} />
 
-      {/* Secondary glow — blue, bottom right */}
+      {/* Secondary glow — bottom right, drifting */}
       <div style={{
-        position: "absolute", bottom: "-10%", right: theme.isDark ? "-10%" : "-5%",
-        width: theme.isDark ? 700 : 660,
-        height: theme.isDark ? 700 : 580,
+        position: "absolute", bottom: "-10%", right: theme.isDark ? "-8%" : "-6%",
+        width: theme.isDark ? 800 : 700,
+        height: theme.isDark ? 750 : 620,
         background: theme.glow2,
-        filter: `blur(${theme.isDark ? 220 : 155}px)`,
+        filter: `blur(${theme.isDark ? 160 : 140}px)`,
         borderRadius: "50%",
+        animation: "orb-drift 11s ease-in-out infinite",
       }} />
 
-      {/* Tertiary glow — teal, mid left */}
+      {/* Tertiary glow — mid left, drifting offset */}
       <div style={{
-        position: "absolute", top: "35%", left: theme.isDark ? "-8%" : "-4%",
-        width: theme.isDark ? 600 : 560,
-        height: theme.isDark ? 600 : 500,
+        position: "absolute", top: "30%", left: theme.isDark ? "-6%" : "-5%",
+        width: theme.isDark ? 700 : 600,
+        height: theme.isDark ? 650 : 540,
         background: theme.glow3,
-        filter: `blur(${theme.isDark ? 200 : 145}px)`,
+        filter: `blur(${theme.isDark ? 160 : 130}px)`,
         borderRadius: "50%",
+        animation: "orb-drift 14s ease-in-out 3s infinite",
       }} />
 
-      {/* Extra glow — rose, lower right (light mode only for richness) */}
+      {/* Quaternary glow — lower area */}
       {!theme.isDark && (
         <div style={{
-          position: "absolute", top: "58%", right: "18%",
-          width: 500, height: 420,
-          background: "rgba(236,72,153,0.14)",
-          filter: "blur(150px)", borderRadius: "50%",
+          position: "absolute", top: "60%", right: "15%",
+          width: 540, height: 460,
+          background: "rgba(180,196,228,0.32)",
+          filter: "blur(130px)", borderRadius: "50%",
+          animation: "orb-drift 16s ease-in-out 6s infinite",
         }} />
       )}
+      {theme.isDark && (
+        <div style={{
+          position: "absolute", top: "50%", right: "5%",
+          width: 600, height: 520,
+          background: "rgba(55,175,235,0.16)",
+          filter: "blur(140px)", borderRadius: "50%",
+          animation: "orb-drift 13s ease-in-out 5s infinite",
+        }} />
+      )}
+
+      {/* Dark mode: starfield */}
+      {theme.isDark && STARS.map((star, i) => (
+        <div key={i} style={{
+          position: "absolute",
+          left: `${star.x}%`, top: `${star.y}%`,
+          width: star.size, height: star.size,
+          borderRadius: "50%",
+          background: i % 5 === 0 ? "#A8E8FF" : "#FFFFFF",
+          opacity: 0.2,
+          animation: `twinkle ${star.duration}s ease-in-out ${star.delay}s infinite`,
+        }} />
+      ))}
+
+      {/* Grain texture — tactile premium feel */}
+      <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%", opacity: theme.isDark ? 0.045 : 0.03, pointerEvents: "none" }}>
+        <filter id="grain-tex">
+          <feTurbulence type="fractalNoise" baseFrequency="0.72" numOctaves="4" stitchTiles="stitch" result="noise" />
+          <feColorMatrix type="saturate" values="0" in="noise" />
+        </filter>
+        <rect width="100%" height="100%" filter="url(#grain-tex)" />
+      </svg>
 
       {/* Orbit rings — dark mode only */}
       {theme.isDark && (
-        <svg viewBox="0 0 1000 1000" style={{ position: "absolute", width: "100%", height: "100%", opacity: 0.06 }}>
+        <svg viewBox="0 0 1000 1000" style={{ position: "absolute", width: "100%", height: "100%", opacity: 0.055 }}>
           <circle cx="500" cy="500" r="250" fill="none" stroke={theme.textMuted} strokeWidth="1" strokeDasharray="4 8" />
           <circle cx="500" cy="500" r="450" fill="none" stroke={theme.textMuted} strokeWidth="1" strokeDasharray="4 8" />
           <circle cx="500" cy="500" r="650" fill="none" stroke={theme.textMuted} strokeWidth="1" strokeDasharray="4 8" />
@@ -1285,13 +1892,13 @@ export default function App() {
     WebkitBackdropFilter: "blur(40px) saturate(160%)",
     boxShadow: t.isDark
       ? "0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08)"
-      : "0 8px 32px rgba(80,40,180,0.08), 0 2px 8px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.95)",
+      : "0 8px 32px rgba(80,95,130,0.08), 0 2px 8px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.95)",
     borderRadius: 20,
     ...extra,
   });
 
   const gradText = (children: React.ReactNode, style?: React.CSSProperties) => (
-    <span style={style}>{children}</span>
+    <span className={t.isDark ? "shimmer-dark" : "shimmer-light"} style={style}>{children}</span>
   );
 
   const container: React.CSSProperties = { maxWidth: 1200, margin: "0 auto", padding: "0 24px" };
@@ -1327,10 +1934,45 @@ export default function App() {
       large: true,
     },
     {
-      icon: <Users size={22} />, title: "Multi-Tenant Isolation",
-      desc: "Every site's data, tools, and conversations are fully isolated. One platform serving thousands of products securely.",
-      detail: ["site_meridian  ── isolated", "site_stackflow ── isolated", "site_arken    ── isolated"],
+      icon: <SlidersHorizontal size={22} />, title: "Choose Your Agent's Personality",
+      desc: "Match your brand voice with custom instructions or predefined profiles.",
       large: true,
+      customDetail: (
+        <div style={{
+          marginTop: 20, padding: "14px 16px", borderRadius: 10,
+          background: t.isDark ? "rgba(255,255,255,0.04)" : t.surface2,
+          border: `1px solid ${t.isDark ? "rgba(255,255,255,0.06)" : "#E4E4E7"}`,
+        }}>
+          {[
+            { label: "Professional", selected: false },
+            { label: "Friendly", selected: true },
+            { label: "Technical", selected: false },
+            { label: "Sales Assistant", selected: false },
+            { label: "Customer Success", selected: false },
+          ].map(opt => (
+            <div key={opt.label} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 9 }}>
+              <div style={{
+                width: 16, height: 16, borderRadius: 9999, flexShrink: 0,
+                border: `2px solid ${opt.selected ? t.accent1 : t.textFaint}`,
+                background: "transparent",
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}>
+                {opt.selected && <div style={{ width: 7, height: 7, borderRadius: 9999, background: t.accent1 }} />}
+              </div>
+              <span style={{ fontSize: 13, color: opt.selected ? t.text : t.textMuted, fontWeight: opt.selected ? 600 : 400 }}>{opt.label}</span>
+            </div>
+          ))}
+          <div style={{
+            marginTop: 10, paddingTop: 10,
+            borderTop: `1px solid ${t.isDark ? "rgba(255,255,255,0.08)" : "#E4E4E7"}`,
+            display: "flex", alignItems: "center", gap: 6,
+            fontSize: 11.5, color: t.accent1, fontFamily: "'JetBrains Mono', monospace",
+          }}>
+            <Check size={11} strokeWidth={2.5} />
+            Custom instructions enabled
+          </div>
+        </div>
+      ),
     },
     {
       icon: <BarChart3 size={22} />, title: "Usage Analytics",
@@ -1375,12 +2017,12 @@ export default function App() {
   ];
 
   const securityItems = [
-    { icon: <Lock size={18} />, title: "End-to-end Encryption", desc: "All data encrypted at rest and in transit" },
-    { icon: <Shield size={18} />, title: "SOC 2 Type II", desc: "Annual third-party security audit" },
-    { icon: <Eye size={18} />, title: "Full Audit Logs", desc: "Every action logged and traceable" },
     { icon: <Database size={18} />, title: "Data Isolation", desc: "Per-tenant database-level isolation" },
-    { icon: <Settings2 size={18} />, title: "Role-based Access", desc: "Granular permissions per team member" },
-    { icon: <Globe size={18} />, title: "GDPR Compliant", desc: "EU and US data residency options" },
+    { icon: <Users size={18} />, title: "Role-Based Access", desc: "Granular permissions per team member" },
+    { icon: <Eye size={18} />, title: "Full Audit Logs", desc: "Every action logged and traceable" },
+    { icon: <Shield size={18} />, title: "AI Guardrails by LangProtect", desc: "Prevent prompt injection, jailbreaks, and unsafe agent behavior", langprotect: true },
+    { icon: <Lock size={18} />, title: "Sensitive Data Protection", desc: "Automatically detect and block PII and confidential data exposure", langprotect: true },
+    { icon: <BarChart3 size={18} />, title: "Runtime Threat Detection", desc: "Monitor conversations, tool calls, and agent actions in real time", langprotect: true },
   ];
 
   const archLayers = [
@@ -1395,6 +2037,15 @@ export default function App() {
       <style>{GLOBAL_CSS}</style>
 
       <ObservatoryField theme={t} />
+
+      {/* ── Aurora strip — iridescent top edge ── */}
+      <div style={{
+        position: "fixed", top: 0, left: 0, right: 0, height: 2, zIndex: 9999, pointerEvents: "none",
+        background: t.isDark
+          ? "linear-gradient(90deg, transparent 0%, rgba(88,236,255,0.4) 20%, rgba(180,220,255,0.85) 50%, rgba(88,236,255,0.4) 80%, transparent 100%)"
+          : "linear-gradient(90deg, transparent 0%, rgba(130,150,200,0.5) 20%, rgba(200,215,245,0.9) 50%, rgba(130,150,200,0.5) 80%, transparent 100%)",
+        animation: "aurora-pulse 3.5s ease-in-out infinite",
+      }} />
 
       <div style={{ position: "relative", zIndex: 1 }}>
 
@@ -1431,7 +2082,7 @@ export default function App() {
           WebkitBackdropFilter: "blur(48px) saturate(180%)",
           borderBottom: t.isDark ? "1px solid rgba(255,255,255,0.08)" : "1px solid rgba(255,255,255,0.65)",
           background: t.isDark ? "rgba(13,13,18,0.82)" : "rgba(242,240,255,0.78)",
-          boxShadow: t.isDark ? "none" : "0 1px 0 rgba(255,255,255,0.9), 0 4px 24px rgba(80,40,180,0.05)",
+          boxShadow: t.isDark ? "none" : "0 1px 0 rgba(255,255,255,0.9), 0 4px 24px rgba(80,95,130,0.05)",
         }}>
           <div style={{ ...container, padding: "0 24px", display: "flex", alignItems: "center", height: 64, gap: 32 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
@@ -1471,36 +2122,19 @@ export default function App() {
         </nav>
 
         {/* ── Hero ── */}
-        <section style={{ ...sectionPad, paddingTop: 120, paddingBottom: 100 }}>
-          <div className="grid-hero" style={{ ...container, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 72, alignItems: "center" }}>
+        <section style={{ paddingTop: 110, paddingBottom: 96 }}>
+          <div className="grid-hero" style={{ width: "100%", maxWidth: "100%", padding: "0 56px", boxSizing: "border-box", display: "grid", gridTemplateColumns: "1fr 1.65fr", gap: 52, alignItems: "center" }}>
             <div>
               <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 32 }}>
-                  <span style={{
-                    padding: "5px 14px", borderRadius: 999, fontSize: 12, fontWeight: 600,
-                    background: `${t.primary}15`, border: `1px solid ${t.primary}25`, color: t.primary,
-                    letterSpacing: "0.06em",
-                  }}>AI Product Agent Platform</span>
-                  <span style={{
-                    display: "flex", alignItems: "center", gap: 6, fontSize: 12,
-                    color: t.textMuted, padding: "5px 12px",
-                    border: `1px solid ${t.border}`, borderRadius: 999,
-                  }}>
-                    <span style={{ width: 6, height: 6, borderRadius: 9999, background: t.primary, display: "inline-block", opacity: 0.75 }} />
-                    v2.4 — Now GA
-                  </span>
-                </div>
-
                 <h1 style={{
-                  fontSize: "clamp(2.8rem, 5vw, 4.2rem)", fontWeight: 800, lineHeight: 1.06,
+                  fontSize: "clamp(2.8rem, 5vw, 4.2rem)", fontWeight: 800, lineHeight: 1.05,
                   letterSpacing: "-0.04em", margin: "0 0 24px",
                 }}>
-                  Ship an AI agent<br />for your product.<br />
-                  {gradText("In 30 minutes.")}
+                  Give your users an agent,<br />{gradText("not a chatbot.")}
                 </h1>
 
                 <p style={{ fontSize: 18, lineHeight: 1.65, color: t.textMuted, marginBottom: 14, maxWidth: 460 }}>
-                  Upload your OpenAPI spec and knowledge base. Navigator deploys an agent that can:
+                  Embed a product-aware AI agent with a single script tag. Navigator can:
                 </p>
 
                 <div style={{ marginBottom: 44, height: 34, display: "flex", alignItems: "center" }}>
@@ -1517,12 +2151,14 @@ export default function App() {
                   />
                 </div>
 
-                <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 52 }}>
-                  <a href="#" style={{
+                <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+                  <a href="#" className="btn-primary" style={{
                     padding: "15px 30px", borderRadius: 14, fontSize: 15, fontWeight: 700,
                     color: t.buttonText, textDecoration: "none", background: t.buttonBg,
                     display: "flex", alignItems: "center", gap: 8,
-                    boxShadow: t.isDark ? "0 0 40px rgba(255,255,255,0.1)" : "0 8px 32px rgba(28,28,30,0.22), 0 2px 8px rgba(28,28,30,0.12)",
+                    boxShadow: t.isDark
+                      ? "0 0 40px rgba(88,236,255,0.12), 0 4px 20px rgba(0,0,0,0.5)"
+                      : "0 8px 32px rgba(28,28,30,0.22), 0 2px 8px rgba(28,28,30,0.12)",
                   }}>
                     Start Free <ArrowRight size={16} />
                   </a>
@@ -1533,60 +2169,78 @@ export default function App() {
                     backdropFilter: "blur(24px) saturate(140%)",
                     WebkitBackdropFilter: "blur(24px) saturate(140%)",
                     border: t.isDark ? `1px solid rgba(255,255,255,0.1)` : `1px solid rgba(255,255,255,0.9)`,
-                    boxShadow: t.isDark ? "none" : "0 4px 16px rgba(80,40,180,0.08), inset 0 1px 0 rgba(255,255,255,0.95)",
+                    boxShadow: t.isDark ? "none" : "0 4px 16px rgba(80,95,130,0.08), inset 0 1px 0 rgba(255,255,255,0.95)",
                     display: "flex", alignItems: "center", gap: 8,
                   }}>
                     Watch it work <ChevronRight size={16} />
                   </a>
                 </div>
-
-                <div style={{ display: "flex", gap: 36, flexWrap: "wrap" }}>
-                  {[
-                    { n: "50+", label: "Product teams" },
-                    { n: "2M+", label: "API calls/day" },
-                    { n: "<200ms", label: "Avg latency" },
-                    { n: "99.9%", label: "Uptime SLA" },
-                  ].map(stat => (
-                    <div key={stat.label}>
-                      <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: "-0.02em", color: t.text }}>{stat.n}</div>
-                      <div style={{ fontSize: 12, color: t.textFaint, marginTop: 2 }}>{stat.label}</div>
-                    </div>
-                  ))}
-                </div>
               </motion.div>
             </div>
 
             <motion.div className="hide-mobile" initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.7, delay: 0.2 }}>
-              <HeroViz theme={t} />
+              <div style={{ marginBottom: 14, display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{
+                  display: "inline-block", padding: "4px 13px", borderRadius: 999,
+                  background: `${t.primary}15`, border: `1px solid ${t.primary}25`,
+                  color: t.primary, fontSize: 11, fontWeight: 600, letterSpacing: "0.07em",
+                  textTransform: "uppercase" as const,
+                }}>Live Demo</span>
+                <span style={{ fontSize: 13, color: t.textMuted }}>Watch Navigator think and act</span>
+              </div>
+              <DemoSection theme={t} heroMode />
             </motion.div>
           </div>
         </section>
 
         {/* ── Marquee Social Proof ── */}
         <section style={{
-          padding: "32px 0",
-          borderTop: `1px solid ${t.border}`,
-          borderBottom: `1px solid ${t.border}`,
+          padding: "22px 0",
+          borderTop: t.isDark ? "1px solid rgba(255,255,255,0.10)" : "1px solid rgba(28,32,50,0.10)",
+          borderBottom: t.isDark ? "1px solid rgba(255,255,255,0.10)" : "1px solid rgba(28,32,50,0.10)",
           overflow: "hidden",
+          background: t.isDark ? "rgba(255,255,255,0.03)" : "rgba(255,255,255,0.55)",
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
         }}>
-          <div style={{
-            display: "flex", alignItems: "center",
-            maskImage: "linear-gradient(to right, transparent, black 12%, black 88%, transparent)",
-            WebkitMaskImage: "linear-gradient(to right, transparent, black 12%, black 88%, transparent)",
-          }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 0 }}>
+            {/* Sticky label */}
             <div style={{
-              display: "flex", gap: 72, alignItems: "center",
-              animation: "marquee 32s linear infinite",
-              willChange: "transform", flexShrink: 0,
-              paddingRight: 72,
+              flexShrink: 0, paddingLeft: 40, paddingRight: 32,
+              borderRight: t.isDark ? "1px solid rgba(255,255,255,0.10)" : "1px solid rgba(28,32,50,0.10)",
+              marginRight: 32,
+              fontSize: 11, fontWeight: 700, letterSpacing: "0.10em",
+              textTransform: "uppercase" as const,
+              color: t.isDark ? "rgba(200,212,236,0.55)" : "rgba(28,32,50,0.45)",
+              whiteSpace: "nowrap",
+            }}>Trusted by</div>
+
+            {/* Scrolling names */}
+            <div style={{
+              flex: 1, overflow: "hidden",
+              maskImage: "linear-gradient(to right, transparent, black 8%, black 92%, transparent)",
+              WebkitMaskImage: "linear-gradient(to right, transparent, black 8%, black 92%, transparent)",
             }}>
-              {[...COMPANY_NAMES, ...COMPANY_NAMES].map((name, i) => (
-                <span key={i} style={{
-                  fontSize: 14, fontWeight: 700, color: t.textFaint,
-                  letterSpacing: "-0.01em", whiteSpace: "nowrap", userSelect: "none",
-                  opacity: 0.55,
-                }}>{name}</span>
-              ))}
+              <div style={{
+                display: "flex", gap: 0, alignItems: "center",
+                animation: "marquee 36s linear infinite",
+                willChange: "transform", flexShrink: 0,
+              }}>
+                {[...COMPANY_NAMES, ...COMPANY_NAMES].map((name, i) => (
+                  <span key={i} style={{ display: "flex", alignItems: "center", whiteSpace: "nowrap", userSelect: "none" }}>
+                    <span style={{
+                      fontSize: 13.5, fontWeight: 600,
+                      color: t.isDark ? "rgba(200,212,236,0.82)" : "rgba(28,32,50,0.72)",
+                      letterSpacing: "0.01em",
+                      padding: "0 36px",
+                    }}>{name}</span>
+                    <span style={{
+                      width: 3, height: 3, borderRadius: "50%", flexShrink: 0,
+                      background: t.isDark ? "rgba(200,212,236,0.25)" : "rgba(28,32,50,0.22)",
+                    }} />
+                  </span>
+                ))}
+              </div>
             </div>
           </div>
         </section>
@@ -1629,7 +2283,7 @@ export default function App() {
                     color: t.primary,
                   }}>{item.icon}</div>
                   <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 10, letterSpacing: "-0.02em" }}>{item.title}</h3>
-                  <p style={{ fontSize: 14.5, lineHeight: 1.65, color: t.textMuted, margin: 0 }}>{item.desc}</p>
+                  <p style={{ fontSize: 15, lineHeight: 1.65, color: t.textMuted, margin: 0 }}>{item.desc}</p>
                 </div>
               ))}
             </div>
@@ -1637,56 +2291,30 @@ export default function App() {
         </section>
 
         {/* ── How It Works ── */}
-        <section style={{ ...sectionPad, background: t.isDark ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.52)", backdropFilter: t.isDark ? undefined : "blur(24px)", WebkitBackdropFilter: t.isDark ? undefined : "blur(24px)" }}>
-          <div style={container}>
-            <div style={{ textAlign: "center", marginBottom: 64 }}>
+        <section style={{ padding: "80px 0", background: t.isDark ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.52)", backdropFilter: t.isDark ? undefined : "blur(24px)", WebkitBackdropFilter: t.isDark ? undefined : "blur(24px)" }}>
+          <div style={{ ...container, maxWidth: "min(1560px, calc(100vw - 32px))" }}>
+
+            {/* Heading */}
+            <div style={{ textAlign: "center", marginBottom: 48 }}>
               {pill("How It Works")}
-              <h2 style={{ fontSize: "clamp(1.8rem, 3.5vw, 2.5rem)", fontWeight: 800, lineHeight: 1.15, margin: "0 0 16px", letterSpacing: "-0.03em" }}>
+              <h2 style={{ fontSize: "clamp(1.8rem, 3.5vw, 2.5rem)", fontWeight: 800, lineHeight: 1.15, margin: "0 0 14px", letterSpacing: "-0.03em" }}>
                 From spec to {gradText("live intelligence")}<br />in four steps
               </h2>
+              <p style={{ fontSize: 17, color: t.textMuted, margin: 0, lineHeight: 1.65, maxWidth: 480, marginLeft: "auto", marginRight: "auto" }}>
+                Upload your OpenAPI spec once. Navigator parses it, generates tools, and lets your agent execute real actions.
+              </p>
             </div>
 
-            <div style={{ position: "relative" }}>
-              <div style={{
-                position: "absolute", top: 34, left: "12.5%", right: "12.5%", height: 1,
-                background: `linear-gradient(90deg, transparent, ${t.primary}50, ${t.primary}50, transparent)`,
-              }} />
+            <PipelineCards theme={t} steps={howItWorks} />
 
-              <div className="grid-4col" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 24, position: "relative" }}>
-                {howItWorks.map((step, i) => (
-                  <motion.div key={i}
-                    initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: i * 0.1 }} viewport={{ once: true }}
-                  >
-                    <div style={{ textAlign: "center" }}>
-                      <div style={{ position: "relative", display: "inline-flex", marginBottom: 28 }}>
-                        <div className={t.isDark ? "orbit-node-dark" : "orbit-node-light"} style={{
-                          width: 68, height: 68, borderRadius: 9999,
-                          background: t.text,
-                          display: "flex", alignItems: "center", justifyContent: "center",
-                          color: t.isDark ? "#09090B" : "#ffffff",
-                        }}>{step.icon}</div>
-                        <div style={{
-                          position: "absolute", top: -4, right: -4, width: 22, height: 22,
-                          borderRadius: 9999, background: t.surface,
-                          border: `1px solid ${t.border}`,
-                          display: "flex", alignItems: "center", justifyContent: "center",
-                          fontSize: 9, fontWeight: 700, color: t.textMuted,
-                          fontFamily: "'JetBrains Mono', monospace",
-                        }}>{step.step}</div>
-                      </div>
-                      <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 10, letterSpacing: "-0.02em" }}>{step.title}</h3>
-                      <p style={{ fontSize: 14, lineHeight: 1.6, color: t.textMuted, margin: 0 }}>{step.desc}</p>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
           </div>
         </section>
 
+        {/* ── Widget Customizer ── */}
+        <WidgetCustomizer theme={t} />
+
         {/* ── Core Capabilities (Bento) ── */}
-        <section style={sectionPad}>
+        <section style={{ ...sectionPad, background: t.isDark ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.52)", backdropFilter: t.isDark ? undefined : "blur(24px)", WebkitBackdropFilter: t.isDark ? undefined : "blur(24px)" }}>
           <div style={container}>
             <div style={{ textAlign: "center", marginBottom: 64 }}>
               {pill("Capabilities")}
@@ -1726,8 +2354,9 @@ export default function App() {
                     justifyContent: "center", color: t.isDark ? "#09090B" : "#fff",
                   }}>{cap.icon}</div>
                   <h3 style={{ fontSize: cap.large ? 17 : 16, fontWeight: 700, marginBottom: 8, letterSpacing: "-0.02em" }}>{cap.title}</h3>
-                  <p style={{ fontSize: 14, lineHeight: 1.65, color: t.textMuted, margin: 0 }}>{cap.desc}</p>
-                  {cap.large && cap.detail && (
+                  <p style={{ fontSize: 15, lineHeight: 1.65, color: t.textMuted, margin: 0 }}>{cap.desc}</p>
+                  {cap.large && (cap as { customDetail?: React.ReactNode }).customDetail}
+                  {cap.large && !('customDetail' in cap) && cap.detail && (
                     <div style={{
                       marginTop: 20, padding: "12px 14px", borderRadius: 10,
                       background: t.isDark ? "rgba(255,255,255,0.04)" : t.surface2,
@@ -1745,71 +2374,12 @@ export default function App() {
           </div>
         </section>
 
-        {/* ── Widget Customizer ── */}
-        <WidgetCustomizer theme={t} />
-
-        {/* ── Interactive Demo ── */}
-        <DemoSection theme={t} />
+        {/* ── Built for Scale ── */}
+        <ScaleSection theme={t} />
 
         {/* ── Testimonials ── */}
         <TestimonialsSection theme={t} />
 
-        {/* ── Architecture ── */}
-        <section style={{ ...sectionPad, background: t.isDark ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.52)", backdropFilter: t.isDark ? undefined : "blur(24px)", WebkitBackdropFilter: t.isDark ? undefined : "blur(24px)" }}>
-          <div style={container}>
-            <div className="grid-2col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 80, alignItems: "start" }}>
-              <div>
-                {pill("Architecture")}
-                <h2 style={{ fontSize: "clamp(1.8rem, 3.5vw, 2.5rem)", fontWeight: 800, lineHeight: 1.15, margin: "0 0 16px", letterSpacing: "-0.03em" }}>
-                  Built for production<br />{gradText("from day one")}
-                </h2>
-                <p style={{ fontSize: 16, lineHeight: 1.7, color: t.textMuted, marginBottom: 32 }}>
-                  Navigator's layered architecture separates concerns cleanly — your widget, our intelligence, your APIs, your data. Nothing shared between tenants.
-                </p>
-                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                  {["PostgreSQL + pgvector for data isolation", "Redis for sub-10ms session retrieval", "OpenAI gpt-4o with full function calling", "Agent loop capped at 10 iterations"].map(item => (
-                    <div key={item} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-                      <CheckCircle2 size={16} style={{ color: t.primary, flexShrink: 0, marginTop: 2 }} />
-                      <span style={{ fontSize: 14, color: t.textMuted }}>{item}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                {archLayers.map((layer, i) => (
-                  <motion.div key={i}
-                    initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.4, delay: i * 0.1 }} viewport={{ once: true }}
-                    style={{ ...card({ padding: "18px 22px" }) }}
-                  >
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-                      <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: "-0.01em" }}>{layer.label}</span>
-                      <span style={{
-                        fontSize: 9, padding: "2px 8px", borderRadius: 999,
-                        background: t.text, color: t.isDark ? "#09090B" : "#fff",
-                        fontWeight: 700, letterSpacing: "0.06em",
-                      }}>LAYER {i + 1}</span>
-                    </div>
-                    <p style={{ fontSize: 12.5, color: t.textMuted, margin: "0 0 10px", lineHeight: 1.5 }}>{layer.desc}</p>
-                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                      {layer.chips.map(chip => (
-                        <span key={chip} style={{
-                          fontSize: 10.5, padding: "3px 10px", borderRadius: 999,
-                          background: `${t.primary}10`, border: `1px solid ${t.primary}22`,
-                          color: t.primary, fontFamily: "'JetBrains Mono', monospace",
-                        }}>{chip}</span>
-                      ))}
-                    </div>
-                    {i < archLayers.length - 1 && (
-                      <div style={{ textAlign: "center", marginTop: -4, marginBottom: -16, color: t.textFaint, fontSize: 16 }}>↓</div>
-                    )}
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
 
         {/* ── Comparison ── */}
         <section style={sectionPad}>
@@ -1884,19 +2454,58 @@ export default function App() {
             </div>
 
             <div className="grid-3col" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }}>
-              {securityItems.map((item, i) => (
-                <div key={i} style={{ ...card({ padding: "24px 28px", display: "flex", gap: 16, alignItems: "flex-start" }) }}>
-                  <div style={{
-                    width: 38, height: 38, borderRadius: 10, flexShrink: 0,
-                    background: `${t.primary}12`, display: "flex", alignItems: "center", justifyContent: "center",
-                    color: t.primary,
-                  }}>{item.icon}</div>
-                  <div>
-                    <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 5 }}>{item.title}</div>
-                    <div style={{ fontSize: 13.5, color: t.textMuted, lineHeight: 1.5 }}>{item.desc}</div>
+              {securityItems.map((item, i) => {
+                const lp = (item as any).langprotect as boolean | undefined;
+                return (
+                  <div key={i} style={{
+                    ...card({ padding: "24px 28px", display: "flex", flexDirection: "column", gap: 0 }),
+                    ...(lp ? {
+                      border: t.isDark ? "1px solid rgba(88,236,255,0.13)" : "1px solid rgba(30,79,170,0.15)",
+                    } : {}),
+                  }}>
+                    <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
+                      <div style={{
+                        width: 38, height: 38, borderRadius: 10, flexShrink: 0,
+                        background: lp
+                          ? (t.isDark ? "rgba(88,236,255,0.10)" : "rgba(30,79,170,0.09)")
+                          : `${t.primary}12`,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        color: lp ? t.accent1 : t.primary,
+                      }}>{item.icon}</div>
+                      <div>
+                        <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 5 }}>{item.title}</div>
+                        <div style={{ fontSize: 14.5, color: t.textMuted, lineHeight: 1.6 }}>{item.desc}</div>
+                      </div>
+                    </div>
+                    {lp && (
+                      <div style={{
+                        marginTop: "auto", paddingTop: 14, marginBlockStart: "auto",
+                        borderTop: t.isDark ? "1px solid rgba(88,236,255,0.12)" : "1px solid rgba(30,79,170,0.12)",
+                        display: "flex", alignItems: "center", gap: 6,
+                      }}>
+                        <img
+                          src="https://www.langprotect.com/favicon.ico"
+                          alt="LangProtect"
+                          style={{ width: 15, height: 15, borderRadius: 3, flexShrink: 0, objectFit: "contain" }}
+                        />
+                        <a
+                          href="https://www.langprotect.com/"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            fontSize: 11.5, fontWeight: 700,
+                            color: t.isDark ? "rgba(88,236,255,0.85)" : "rgba(20,58,140,0.80)",
+                            letterSpacing: "0.04em", textDecoration: "none",
+                            transition: "color 0.15s",
+                          }}
+                          onMouseEnter={e => (e.currentTarget.style.color = t.accent1)}
+                          onMouseLeave={e => (e.currentTarget.style.color = t.isDark ? "rgba(88,236,255,0.85)" : "rgba(20,58,140,0.80)")}
+                        >Powered by LangProtect</a>
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </section>
@@ -1915,9 +2524,9 @@ export default function App() {
                 </p>
                 <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                   {[
-                    { icon: <Package size={16} />, label: "Zero-dependency widget bundle", desc: "Pure IIFE — no React, no bundler on the host" },
-                    { icon: <GitBranch size={16} />, label: "REST API & TypeScript SDK", desc: "Full programmatic access with type safety" },
-                    { icon: <Braces size={16} />, label: "OpenAPI auto-ingestion", desc: "Point at any spec URL — tools appear instantly" },
+                    { icon: <Package size={16} />, label: "One-Line Installation", desc: "Deploy an AI agent with a single script tag." },
+                    { icon: <Braces size={16} />, label: "Automatic API Tool Discovery", desc: "Import an OpenAPI spec and expose endpoints as agent tools instantly." },
+                    { icon: <SlidersHorizontal size={16} />, label: "Full Dashboard Control", desc: "Customize prompts, behavior, tools, permissions, and branding without code." },
                   ].map(item => (
                     <div key={item.label} style={{ display: "flex", gap: 14 }}>
                       <div style={{
@@ -1927,7 +2536,7 @@ export default function App() {
                       }}>{item.icon}</div>
                       <div>
                         <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 3 }}>{item.label}</div>
-                        <div style={{ fontSize: 13, color: t.textMuted }}>{item.desc}</div>
+                        <div style={{ fontSize: 14.5, color: t.textMuted }}>{item.desc}</div>
                       </div>
                     </div>
                   ))}
@@ -2028,13 +2637,13 @@ export default function App() {
                     ...card({
                       padding: 32,
                       border: plan.highlight
-                        ? t.isDark ? `1.5px solid rgba(255,255,255,0.16)` : `1.5px solid rgba(124,58,237,0.35)`
+                        ? t.isDark ? `1.5px solid rgba(200,212,235,0.20)` : `1.5px solid rgba(148,162,195,0.45)`
                         : `1px solid ${t.border}`,
                       boxShadow: plan.highlight
                         ? t.isDark
-                          ? `0 0 0 1px rgba(168,85,247,0.1), 0 24px 80px rgba(0,0,0,0.4), 0 0 80px rgba(168,85,247,0.08)`
-                          : `0 0 0 1px rgba(124,58,237,0.12), 0 24px 80px rgba(124,58,237,0.14), inset 0 1px 0 rgba(255,255,255,0.95)`
-                        : t.isDark ? "none" : `0 4px 24px rgba(80,40,180,0.07), inset 0 1px 0 rgba(255,255,255,0.9)`,
+                          ? `0 0 0 1px rgba(180,195,225,0.12), 0 24px 80px rgba(0,0,0,0.4), 0 0 80px rgba(160,178,215,0.10)`
+                          : `0 0 0 1px rgba(148,162,195,0.18), 0 24px 80px rgba(100,118,158,0.14), inset 0 1px 0 rgba(255,255,255,0.95)`
+                        : t.isDark ? "none" : `0 4px 24px rgba(100,118,158,0.07), inset 0 1px 0 rgba(255,255,255,0.9)`,
                       position: "relative", overflow: "hidden",
                     }),
                   }}
@@ -2042,7 +2651,7 @@ export default function App() {
                   {plan.highlight && (
                     <div style={{
                       position: "absolute", top: 0, left: "10%", right: "10%", height: 1,
-                      background: "linear-gradient(90deg, transparent, rgba(168,85,247,0.5), rgba(96,165,250,0.5), transparent)",
+                      background: "linear-gradient(90deg, transparent, rgba(190,205,230,0.75), rgba(220,228,242,0.75), transparent)",
                     }} />
                   )}
                   {plan.highlight && (
@@ -2080,7 +2689,7 @@ export default function App() {
                     {plan.features.map(f => (
                       <div key={f} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
                         <Check size={15} style={{ color: t.primary, flexShrink: 0, marginTop: 1 }} />
-                        <span style={{ fontSize: 13.5, color: t.textMuted }}>{f}</span>
+                        <span style={{ fontSize: 14.5, color: t.textMuted }}>{f}</span>
                       </div>
                     ))}
                   </div>
@@ -2098,7 +2707,7 @@ export default function App() {
         <FAQSection theme={t} />
 
         {/* ── Final CTA ── */}
-        <section style={sectionPad}>
+        <section style={{ ...sectionPad, background: t.isDark ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.52)", backdropFilter: t.isDark ? undefined : "blur(24px)", WebkitBackdropFilter: t.isDark ? undefined : "blur(24px)" }}>
           <div style={container}>
             <motion.div
               initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }}
@@ -2109,7 +2718,7 @@ export default function App() {
                 backdropFilter: "blur(40px) saturate(160%)",
                 WebkitBackdropFilter: "blur(40px) saturate(160%)",
                 border: t.isDark ? `1px solid rgba(255,255,255,0.08)` : `1px solid rgba(255,255,255,0.92)`,
-                boxShadow: t.isDark ? "none" : "0 24px 80px rgba(80,40,180,0.1), inset 0 1px 0 rgba(255,255,255,0.95)",
+                boxShadow: t.isDark ? "none" : "0 24px 80px rgba(80,95,130,0.1), inset 0 1px 0 rgba(255,255,255,0.95)",
                 position: "relative", overflow: "hidden",
               }}
             >
@@ -2141,7 +2750,7 @@ export default function App() {
                 }}>Get started today</span>
 
                 <h2 style={{
-                  fontSize: "clamp(2.4rem, 5vw, 3.8rem)", fontWeight: 800, lineHeight: 1.08,
+                  fontSize: "clamp(2.4rem, 5vw, 3.8rem)", fontWeight: 800, lineHeight: 1.1,
                   letterSpacing: "-0.04em", margin: "0 0 20px",
                 }}>
                   Your product deserves<br />
