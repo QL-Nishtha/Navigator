@@ -138,8 +138,8 @@ export default function LoginPage() {
           background: t.isDark
             ? "linear-gradient(155deg, #0A1630 0%, #0E1F42 50%, #070C1C 100%)"
             : "linear-gradient(155deg, #DBE8FF 0%, #E8F0FF 50%, #D6E4FF 100%)",
-          padding: "48px 48px 44px",
-          display: "flex", flexDirection: "column",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          padding: "32px",
           transition: "background 0.4s ease",
         }}>
           {/* Ambient orbs */}
@@ -156,27 +156,8 @@ export default function LoginPage() {
             filter: "blur(70px)", pointerEvents: "none",
           }}/>
 
-          {/* Badge */}
-          <div style={{ position: "relative", zIndex: 5, flexShrink: 0 }}>
-            <div style={{
-              display: "inline-flex", alignItems: "center", gap: 8,
-              background: t.isDark ? "rgba(88,236,255,0.10)" : "rgba(30,79,170,0.09)",
-              borderRadius: 999, padding: "6px 16px", marginBottom: 20,
-              border: `1px solid ${t.isDark ? "rgba(88,236,255,0.22)" : "rgba(30,79,170,0.22)"}`,
-            }}>
-              <motion.div
-                animate={{ opacity: [1, 0.3, 1] }}
-                transition={{ duration: 1.6, repeat: Infinity }}
-                style={{ width: 6, height: 6, borderRadius: "50%", background: t.accent1 }}
-              />
-              <span style={{ fontSize: 11, fontWeight: 600, color: t.accent1, letterSpacing: "0.10em", textTransform: "uppercase" }}>
-                Live platform
-              </span>
-            </div>
-          </div>
-
-          {/* B2B Infographic */}
-          <div style={{ position: "relative", zIndex: 5, flex: 1, minHeight: 200, margin: "8px -16px 0" }}>
+          {/* B2B Infographic — centered */}
+          <div style={{ position: "relative", zIndex: 5, width: "100%", height: "100%" }}>
             <B2BInfographic isDark={t.isDark} />
           </div>
         </div>
